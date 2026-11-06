@@ -46,8 +46,8 @@ try:
     id_sede = opciones_sedes[sede_seleccionada]
 
     # 2. Cargar Años disponibles en ventas
-    df_anos = run_query("SELECT DISTINCT ano FROM ventas ORDER BY ano DESC")
-    lista_anos = df_anos["ano"].tolist() if not df_anos.empty else [2026]
+    df_anos = run_query("SELECT DISTINCT year FROM ventas ORDER BY year DESC")
+    lista_anos = df_anos["year"].tolist() if not df_year.empty else [2026]
     ano_seleccionado = st.sidebar.selectbox("Seleccionar Año:", options=lista_anos)
 
     # 3. Consulta de Métricas Generales (vta_dia)
@@ -135,7 +135,7 @@ try:
             FROM ventas v
             JOIN art a ON v.cod = a.cod
             JOIN linea l ON a.co_lin = l.co_lin
-            WHERE v.ano = :ano {"AND v.id = :id_sede" if id_sede else ""}
+            WHERE v.year = :ano {"AND v.id = :id_sede" if id_sede else ""}
             GROUP BY l.lin_des
             ORDER BY total_monto DESC
             LIMIT 10
@@ -158,7 +158,7 @@ try:
             SELECT ven.ven_des AS vendedor, SUM(vv.mnt) AS total_ventas
             FROM vta_vend vv
             JOIN vendedor ven ON vv.co_ven = ven.co_ven
-            WHERE vv.ano = :ano {"AND vv.id = :id_sede" if id_sede else ""}
+            WHERE vv.year = :ano {"AND vv.id = :id_sede" if id_sede else ""}
             GROUP BY ven.ven_des
             ORDER BY total_ventas DESC
             LIMIT 10
@@ -188,7 +188,7 @@ try:
         JOIN art a ON v.cod = a.cod
         LEFT JOIN lab lb ON a.co_lab = lb.co_lab
         LEFT JOIN linea l ON a.co_lin = l.co_lin
-        WHERE v.ano = :ano {"AND v.id = :id_sede" if id_sede else ""}
+        WHERE v.year = :ano {"AND v.id = :id_sede" if id_sede else ""}
         GROUP BY a.cod, a.desc_art, lb.des_lab, l.lin_des
         ORDER BY Monto_Total DESC
         LIMIT 15
