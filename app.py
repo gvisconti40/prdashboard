@@ -27,15 +27,15 @@ def get_db_engine():
 def generar_datos_prueba():
     hoy = datetime.now().date()
     sucursales = [
-        {"id_sucursal": 1, "codigo_sucursal": "F001", "nombre": "Farmacia Central", "ciudad": "Caracas"},
-        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia Las Mercedes", "ciudad": "Caracas"},
-        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Bella Vista", "ciudad": "Maracaibo"},
-        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia Los Sauces", "ciudad": "Valencia"},
-        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia El Parral", "ciudad": "Valencia"}
+        {"id_sucursal": 1, "codigo_sucursal": "F001", "nombre": "Farmacia Central", "ciudad": "Caracas", "zona": "Gran Caracas"},
+        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia Las Mercedes", "ciudad": "Caracas", "zona": "Gran Caracas"},
+        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Bella Vista", "ciudad": "Maracaibo", "zona": "Occidente"},
+        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia Los Sauces", "ciudad": "Valencia", "zona": "Centro"},
+        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia El Parral", "ciudad": "Valencia", "zona": "Centro"}
     ]
     df_suc = pd.DataFrame(sucursales)
 
-    # Catálogo Maestro: solo datos intrínsecos del producto (sin proveedor fijo)
+    # Catálogo Maestro: 25 productos de ejemplo para poder visualizar Top 20
     productos = [
         (1, "7591001", "Atorvastatina 20mg x 30 Tab", "Pfizer"),
         (2, "7591002", "Losartán Potásico 50mg x 30 Comp", "Calox"),
@@ -46,24 +46,39 @@ def generar_datos_prueba():
         (7, "7591007", "Vitamina C 1000mg Efervescente", "Bayer"),
         (8, "7591008", "Metformina 850mg x 30 Tab", "Merck"),
         (9, "7591009", "Loratadina 10mg x 10 Tab", "Leti"),
-        (10, "7591010", "Cetirizina 10mg x 10 Tab", "Genven")
+        (10, "7591010", "Cetirizina 10mg x 10 Tab", "Genven"),
+        (11, "7591011", "Diclofenac Sódico 50mg x 20 Tab", "Novartis"),
+        (12, "7591012", "Enalapril 20mg x 30 Tab", "Calox"),
+        (13, "7591013", "Azitromicina 500mg x 3 Tab", "Pfizer"),
+        (14, "7591014", "Complejo B Forte x 30 Grageas", "Bayer"),
+        (15, "7591015", "Ciprofloxacina 500mg x 10 Tab", "Genven"),
+        (16, "7591016", "Pantoprazol 40mg x 14 Tab", "Takeda"),
+        (17, "7591017", "Levotiroxina 100mcg x 50 Tab", "Merck"),
+        (18, "7591018", "Salbutamol Inhalador 100mcg", "GSK"),
+        (19, "7591019", "Clopidogrel 75mg x 28 Tab", "Sanofi"),
+        (20, "7591020", "Ketoprofeno 100mg x 24 Cáps", "Leti"),
+        (21, "7591021", "Desloratadina 5mg x 10 Tab", "Schering"),
+        (22, "7591022", "Ácido Fólico 5mg x 30 Tab", "Calox"),
+        (23, "7591023", "Fluconazol 150mg x 2 Cáps", "Pfizer"),
+        (24, "7591024", "Glimepirida 4mg x 30 Tab", "Sanofi"),
+        (25, "7591025", "Calcio + Vitamina D3 x 60 Tab", "Bayer")
     ]
     df_prod = pd.DataFrame(productos, columns=["id_producto", "codigo_barras", "nombre_producto", "laboratorio"])
 
     fechas = [hoy - timedelta(days=i) for i in range(30, -1, -1)]
-    proveedores_lista = ["Cobeca", "Droguería Nena", "Drolanca", "Grupo Farvenca"]
+    proveedores_lista = ["Cobeca", "Droguería Nena", "Drolanca", "Grupo Farvenca", "Droguería Vitalis", "Distribuidora La Santé", "Droguería Farmatodo"]
 
-    # 1. Ventas Diarias Globales
+    # 1. Ventas Diarias Globales por Farmacia
     filas_vta = []
     for suc in sucursales:
         for f in fechas:
-            tck = random.randint(45, 160)
-            fact = round(tck * random.uniform(18.5, 38.0), 2)
+            ops = random.randint(45, 160) # Número de operaciones / tickets del día
+            fact = round(ops * random.uniform(18.5, 38.0), 2)
             filas_vta.append({
                 "id_sucursal": suc["id_sucursal"],
                 "fecha": f,
                 "total_facturado": fact,
-                "cantidad_tickets": tck
+                "numero_operaciones": ops
             })
     df_vta_dia = pd.DataFrame(filas_vta)
 
@@ -257,7 +272,7 @@ else:
     try:
         engine = get_db_engine()
         with engine.connect() as conn:
-            df_sucursales = pd.read_sql(text("SELECT id_sucursal, codigo_sucursal, nombre, ciudad FROM sucursales ORDER BY nombre"), conn)
+            df_sucursales = pd.read_sql(text("SELECT id_sucursal, codigo_sucursal, nombre, ciudad, zona FROM sucursales ORDER BY nombre"), conn)
             df_catalogo_prod = pd.read_sql(text("SELECT DISTINCT laboratorio FROM maestro_productos"), conn)
             df_provs = pd.read_sql(text("SELECT DISTINCT nombre_proveedor FROM kpi_compras_por_producto UNION SELECT DISTINCT nombre_proveedor FROM kpi_cxp_diario"), conn)
             lista_provs = sorted(df_provs["nombre_proveedor"].dropna().unique().tolist())
@@ -270,15 +285,28 @@ else:
         lista_provs = sorted(datos["compras"]["nombre_proveedor"].unique().tolist())
         modo_datos = "Simulación (Datos de Prueba)"
 
-# 1. Selector de Sucursal
-opciones_sucursales = {"Todas las sucursales": None}
-for _, row in df_sucursales.iterrows():
+# 1. Filtro por Zona Geográfica
+zonas_disponibles = sorted([z for z in df_sucursales["zona"].dropna().unique().tolist() if str(z).strip()]) if "zona" in df_sucursales else []
+zona_seleccionada = st.sidebar.selectbox("Zona Geográfica:", options=["Todas las zonas"] + zonas_disponibles)
+
+# Filtrar sucursales según la zona seleccionada
+df_sucursales_filtradas = df_sucursales.copy()
+if zona_seleccionada != "Todas las zonas":
+    df_sucursales_filtradas = df_sucursales_filtradas[df_sucursales_filtradas["zona"] == zona_seleccionada]
+
+# 2. Selector de Sucursal
+opciones_sucursales = {"Todas las sucursales de la zona" if zona_seleccionada != "Todas las zonas" else "Todas las sucursales": None}
+for _, row in df_sucursales_filtradas.iterrows():
     cod_txt = f"[{row['codigo_sucursal']}] " if "codigo_sucursal" in row and pd.notna(row['codigo_sucursal']) else ""
     ciudad_txt = f" - {row['ciudad']}" if pd.notna(row['ciudad']) else ""
-    opciones_sucursales[f"{cod_txt}{row['nombre']}{ciudad_txt}"] = int(row['id_sucursal'])
+    zona_txt = f" ({row['zona']})" if pd.notna(row.get('zona')) and zona_seleccionada == "Todas las zonas" else ""
+    opciones_sucursales[f"{cod_txt}{row['nombre']}{ciudad_txt}{zona_txt}"] = int(row['id_sucursal'])
 
 sucursal_label = st.sidebar.selectbox("Sucursal:", options=list(opciones_sucursales.keys()))
 id_sucursal = opciones_sucursales[sucursal_label]
+
+# Lista de IDs de sucursales permitidas por el filtro de zona
+ids_sucursales_zona = df_sucursales_filtradas["id_sucursal"].tolist()
 
 # 2. Selector de Fechas
 hoy = datetime.now().date()
@@ -323,6 +351,8 @@ if modo_datos == "Simulación (Datos de Prueba)":
     df_v_prod = df_v_prod[(df_v_prod["fecha"] >= f_ini) & (df_v_prod["fecha"] <= f_fin)]
     if id_sucursal:
         df_v_prod = df_v_prod[df_v_prod["id_sucursal"] == id_sucursal]
+    else:
+        df_v_prod = df_v_prod[df_v_prod["id_sucursal"].isin(ids_sucursales_zona)]
     if filtro_lab_activo:
         df_v_prod = df_v_prod[df_v_prod["laboratorio"] == lab_seleccionado]
 
@@ -330,19 +360,23 @@ if modo_datos == "Simulación (Datos de Prueba)":
     if filtro_lab_activo:
         df_v_dia = df_v_prod.groupby(["fecha"]).agg(
             total_facturado=("total_venta_monto", "sum"),
-            cantidad_tickets=("unidades_vendidas", "count")
+            numero_operaciones=("unidades_vendidas", "count")
         ).reset_index()
     else:
         df_v_dia = datos["ventas_diarias"]
         df_v_dia = df_v_dia[(df_v_dia["fecha"] >= f_ini) & (df_v_dia["fecha"] <= f_fin)]
         if id_sucursal:
             df_v_dia = df_v_dia[df_v_dia["id_sucursal"] == id_sucursal]
+        else:
+            df_v_dia = df_v_dia[df_v_dia["id_sucursal"].isin(ids_sucursales_zona)]
 
-    # 3. Compras por Producto y Proveedor (Permite filtrar tanto por lab como por proveedor)
+    # 3. Compras por Producto y Proveedor
     df_comp = datos["compras"].merge(datos["productos"], on="id_producto")
     df_comp = df_comp[(df_comp["fecha"] >= f_ini) & (df_comp["fecha"] <= f_fin)]
     if id_sucursal:
         df_comp = df_comp[df_comp["id_sucursal"] == id_sucursal]
+    else:
+        df_comp = df_comp[df_comp["id_sucursal"].isin(ids_sucursales_zona)]
     if filtro_lab_activo:
         df_comp = df_comp[df_comp["laboratorio"] == lab_seleccionado]
     if filtro_prov_activo:
@@ -352,6 +386,8 @@ if modo_datos == "Simulación (Datos de Prueba)":
     df_inv = datos["inventario"].merge(datos["productos"], on="id_producto").merge(datos["sucursales"], on="id_sucursal")
     if id_sucursal:
         df_inv = df_inv[df_inv["id_sucursal"] == id_sucursal]
+    else:
+        df_inv = df_inv[df_inv["id_sucursal"].isin(ids_sucursales_zona)]
     if filtro_lab_activo:
         df_inv = df_inv[df_inv["laboratorio"] == lab_seleccionado]
 
@@ -359,29 +395,41 @@ if modo_datos == "Simulación (Datos de Prueba)":
     df_vend = datos["vendedores"][(datos["vendedores"]["fecha"] >= f_ini) & (datos["vendedores"]["fecha"] <= f_fin)]
     if id_sucursal:
         df_vend = df_vend[df_vend["id_sucursal"] == id_sucursal]
+    else:
+        df_vend = df_vend[df_vend["id_sucursal"].isin(ids_sucursales_zona)]
 
     # 6. Formas de Pago
     df_pagos = datos["formas_pago"][(datos["formas_pago"]["fecha"] >= f_ini) & (datos["formas_pago"]["fecha"] <= f_fin)]
     if id_sucursal:
         df_pagos = df_pagos[df_pagos["id_sucursal"] == id_sucursal]
+    else:
+        df_pagos = df_pagos[df_pagos["id_sucursal"].isin(ids_sucursales_zona)]
 
-    # 7. Bancos
+    # 7. Bancos y Cajas
     df_bancos = datos["bancos"]
     if id_sucursal:
         df_bancos = df_bancos[df_bancos["id_sucursal"] == id_sucursal]
+    else:
+        df_bancos = df_bancos[df_bancos["id_sucursal"].isin(ids_sucursales_zona)]
 
     df_cajas = datos["cajas"]
     if id_sucursal:
         df_cajas = df_cajas[df_cajas["id_sucursal"] == id_sucursal]
+    else:
+        df_cajas = df_cajas[df_cajas["id_sucursal"].isin(ids_sucursales_zona)]
 
     # 8. CxC y CxP
     df_cxc = datos["cxc"]
     if id_sucursal:
         df_cxc = df_cxc[df_cxc["id_sucursal"] == id_sucursal]
+    else:
+        df_cxc = df_cxc[df_cxc["id_sucursal"].isin(ids_sucursales_zona)]
 
     df_cxp = datos["cxp"]
     if id_sucursal:
         df_cxp = df_cxp[df_cxp["id_sucursal"] == id_sucursal]
+    else:
+        df_cxp = df_cxp[df_cxp["id_sucursal"].isin(ids_sucursales_zona)]
     if filtro_prov_activo:
         df_cxp = df_cxp[df_cxp["nombre_proveedor"] == prov_seleccionado]
 
@@ -396,14 +444,14 @@ with tab_ventas:
 
     tot_facturado = df_v_prod["total_venta_monto"].sum() if filtro_lab_activo else (df_v_dia["total_facturado"].sum() if not df_v_dia.empty else 0)
     tot_unidades = df_v_prod["unidades_vendidas"].sum() if not df_v_prod.empty else 0
-    tot_tickets = df_v_dia["cantidad_tickets"].sum() if not df_v_dia.empty else 0
-    ticket_prom = (tot_facturado / tot_tickets) if tot_tickets > 0 else 0
+    tot_operaciones = df_v_dia["numero_operaciones"].sum() if not df_v_dia.empty else 0
+    ticket_prom = (tot_facturado / tot_operaciones) if tot_operaciones > 0 else 0
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Ventas Totales ($)", f"${tot_facturado:,.2f}")
-    c2.metric("Unidades Vendidas", f"{int(tot_unidades):,}")
-    c3.metric("Tickets / Clientes", f"{int(tot_tickets):,}")
-    c4.metric("Ticket Promedio", f"${ticket_prom:,.2f}")
+    c2.metric("Nº de Operaciones (Tickets)", f"{int(tot_operaciones):,}")
+    c3.metric("Ticket Promedio", f"${ticket_prom:,.2f}")
+    c4.metric("Unidades Vendidas", f"{int(tot_unidades):,}")
 
     st.divider()
 
@@ -425,12 +473,15 @@ with tab_ventas:
     else:
         st.warning("No hay registros de ventas para esta selección.")
 
-    col_prod, col_lab = st.columns(2)
+    col_prod, col_lab = st.columns([3, 2])
     with col_prod:
-        st.markdown("#### 🏆 Top Productos Más Vendidos")
+        st.markdown("#### 🏆 Top 20 Productos Más Vendidos")
         if not df_v_prod.empty:
-            df_top_p = df_v_prod.groupby("nombre_producto")["total_venta_monto"].sum().reset_index()
-            df_top_p = df_top_p.sort_values("total_venta_monto", ascending=False).head(10)
+            df_top_p = df_v_prod.groupby("nombre_producto").agg(
+                total_venta_monto=("total_venta_monto", "sum"),
+                unidades=("unidades_vendidas", "sum")
+            ).reset_index()
+            df_top_p = df_top_p.sort_values("total_venta_monto", ascending=False).head(20)
             fig_p = px.bar(
                 df_top_p, 
                 x="total_venta_monto", 
@@ -438,7 +489,9 @@ with tab_ventas:
                 orientation="h",
                 labels={"total_venta_monto": "Monto ($)", "nombre_producto": "Producto"},
                 color="total_venta_monto",
-                color_continuous_scale="Teal"
+                color_continuous_scale="Teal",
+                hover_data={"unidades": True, "total_venta_monto": ":$.2f"},
+                height=650
             )
             fig_p.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig_p, use_container_width=True)
@@ -448,11 +501,55 @@ with tab_ventas:
     with col_lab:
         st.markdown("#### 🧪 Participación de Laboratorios")
         if not df_v_prod.empty:
-            df_lab_agg = df_v_prod.groupby("laboratorio")["total_venta_monto"].sum().reset_index()
-            fig_l = px.pie(df_lab_agg, names="laboratorio", values="total_venta_monto", hole=0.4)
+            df_lab_agg = df_v_prod.groupby("laboratorio").agg(
+                total_venta_monto=("total_venta_monto", "sum"),
+                unidades_vendidas=("unidades_vendidas", "sum")
+            ).reset_index()
+            fig_l = px.pie(
+                df_lab_agg, 
+                names="laboratorio", 
+                values="total_venta_monto", 
+                hole=0.4,
+                custom_data=["unidades_vendidas"]
+            )
+            fig_l.update_traces(
+                hovertemplate="<b>Laboratorio:</b> %{label}<br>" +
+                              "<b>Venta Total:</b> $%{value:,.2f}<br>" +
+                              "<b>Participación:</b> %{percent}<br>" +
+                              "<b>Unidades Vendidas:</b> %{customdata[0]:,}<extra></extra>"
+            )
             st.plotly_chart(fig_l, use_container_width=True)
         else:
             st.info("Sin registros de laboratorio.")
+
+    st.divider()
+
+    # Tabla Detallada de Todos los Artículos Vendidos
+    st.markdown("#### 📋 Detalle Completo de Artículos Vendidos")
+    if not df_v_prod.empty:
+        df_detalle_art = df_v_prod.groupby(["codigo_barras", "nombre_producto", "laboratorio"]).agg(
+            unidades_vendidas=("unidades_vendidas", "sum"),
+            total_venta_monto=("total_venta_monto", "sum")
+        ).reset_index()
+
+        # Precio promedio por unidad vendida
+        df_detalle_art["precio_promedio"] = round(df_detalle_art["total_venta_monto"] / df_detalle_art["unidades_vendidas"], 2)
+        df_detalle_art = df_detalle_art.sort_values("total_venta_monto", ascending=False)
+
+        st.dataframe(
+            df_detalle_art,
+            use_container_width=True,
+            column_config={
+                "codigo_barras": "Código de Barras",
+                "nombre_producto": "Descripción del Producto",
+                "laboratorio": "Laboratorio",
+                "unidades_vendidas": st.column_config.NumberColumn("Unidades Vendidas", format="%d"),
+                "precio_promedio": st.column_config.NumberColumn("Precio Prom. ($)", format="$%.2f"),
+                "total_venta_monto": st.column_config.NumberColumn("Monto Total Facturado ($)", format="$%.2f")
+            }
+        )
+    else:
+        st.info("Sin registros de artículos vendidos para este período.")
 
 # =========================================================================
 # TAB 2: COMPRAS & PROVEEDORES (Filtros cruzados Lab + Proveedor)
@@ -479,36 +576,111 @@ with tab_compras:
 
     st.divider()
 
+    # Fila de Gráficos de Compras: Por Fecha, Top Droguerías y Compras por Laboratorio
     col_c_izq, col_c_der = st.columns(2)
     with col_c_izq:
         st.markdown("#### 📅 Inversión en Compras por Fecha")
         if not df_comp.empty:
-            df_c_fecha = df_comp.groupby("fecha")["total_compra_monto"].sum().reset_index()
+            df_c_fecha = df_comp.groupby("fecha").agg(
+                total_compra_monto=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index()
             fig_cf = px.bar(
                 df_c_fecha,
                 x="fecha",
                 y="total_compra_monto",
                 labels={"total_compra_monto": "Inversión ($)", "fecha": "Fecha"},
-                color_discrete_sequence=["#e67e22"]
+                color_discrete_sequence=["#e67e22"],
+                custom_data=["unidades_compradas"]
+            )
+            fig_cf.update_traces(
+                hovertemplate="<b>Fecha:</b> %{x}<br>" +
+                              "<b>Inversión:</b> $%{y:,.2f}<br>" +
+                              "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
             )
             st.plotly_chart(fig_cf, use_container_width=True)
         else:
             st.info("Sin compras registradas para estos filtros.")
 
     with col_c_der:
-        st.markdown("#### 🚚 Distribución de Compras por Proveedor")
+        st.markdown("#### 🚚 Top 5 Compras por Droguería / Proveedor")
         if not df_comp.empty:
-            df_c_prov = df_comp.groupby("nombre_proveedor")["total_compra_monto"].sum().reset_index()
-            fig_cp = px.pie(
-                df_c_prov,
-                names="nombre_proveedor",
-                values="total_compra_monto",
-                hole=0.4,
-                title="Participación de Proveedores"
+            df_c_prov = df_comp.groupby("nombre_proveedor").agg(
+                total_compra_monto=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index()
+            df_top5_prov = df_c_prov.sort_values("total_compra_monto", ascending=False).head(5)
+            fig_cp = px.bar(
+                df_top5_prov,
+                x="total_compra_monto",
+                y="nombre_proveedor",
+                orientation="h",
+                labels={"total_compra_monto": "Inversión ($)", "nombre_proveedor": "Droguería"},
+                color="total_compra_monto",
+                color_continuous_scale="Oranges",
+                custom_data=["unidades_compradas"]
             )
+            fig_cp.update_traces(
+                hovertemplate="<b>Droguería:</b> %{y}<br>" +
+                              "<b>Inversión Total:</b> $%{x:,.2f}<br>" +
+                              "<b>Unidades Adquiridas:</b> %{customdata[0]:,}<extra></extra>"
+            )
+            fig_cp.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig_cp, use_container_width=True)
         else:
             st.info("Sin datos de proveedores.")
+
+    st.divider()
+
+    # Nuevo Gráfico: Compras por Laboratorio (con detalle al pasar el ratón)
+    col_c_lab_bar, col_c_lab_pie = st.columns([3, 2])
+    with col_c_lab_bar:
+        st.markdown("#### 🧪 Compras por Laboratorio / Fabricante")
+        if not df_comp.empty:
+            df_c_lab = df_comp.groupby("laboratorio").agg(
+                total_compra_monto=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index().sort_values("total_compra_monto", ascending=False)
+
+            fig_clab = px.bar(
+                df_c_lab,
+                x="total_compra_monto",
+                y="laboratorio",
+                orientation="h",
+                labels={"total_compra_monto": "Inversión ($)", "laboratorio": "Laboratorio"},
+                color="total_compra_monto",
+                color_continuous_scale="Viridis",
+                custom_data=["unidades_compradas"]
+            )
+            fig_clab.update_traces(
+                hovertemplate="<b>Laboratorio:</b> %{y}<br>" +
+                              "<b>Inversión Total:</b> $%{x:,.2f}<br>" +
+                              "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
+            )
+            fig_clab.update_layout(yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig_clab, use_container_width=True)
+        else:
+            st.info("Sin registros de compras por laboratorio.")
+
+    with col_c_lab_pie:
+        st.markdown("#### 🥧 Distribución de Compras por Laboratorio")
+        if not df_comp.empty:
+            fig_clab_pie = px.pie(
+                df_c_lab,
+                names="laboratorio",
+                values="total_compra_monto",
+                hole=0.4,
+                custom_data=["unidades_compradas"]
+            )
+            fig_clab_pie.update_traces(
+                hovertemplate="<b>Laboratorio:</b> %{label}<br>" +
+                              "<b>Inversión:</b> $%{value:,.2f}<br>" +
+                              "<b>Participación:</b> %{percent}<br>" +
+                              "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
+            )
+            st.plotly_chart(fig_clab_pie, use_container_width=True)
+        else:
+            st.info("Sin datos para distribución de laboratorios.")
 
     st.markdown("#### 📋 Detalle de Artículos Comprados")
     if not df_comp.empty:

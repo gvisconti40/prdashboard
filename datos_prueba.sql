@@ -3,14 +3,14 @@
 -- Compatible con el nuevo esquema de KPIs para Red de Farmacias
 -- =========================================================================
 
--- 1. Sucursales
-INSERT INTO sucursales (id_sucursal, codigo_sucursal, nombre, ciudad) VALUES
-(1, 'F001', 'Farmacia Central', 'Caracas'),
-(2, 'F002', 'Farmacia Las Mercedes', 'Caracas'),
-(3, 'F003', 'Farmacia Bella Vista', 'Maracaibo'),
-(4, 'F004', 'Farmacia Los Sauces', 'Valencia'),
-(5, 'F005', 'Farmacia El Parral', 'Valencia')
-ON DUPLICATE KEY UPDATE nombre=VALUES(nombre), codigo_sucursal=VALUES(codigo_sucursal);
+-- 1. Sucursales (con Zona)
+INSERT INTO sucursales (id_sucursal, codigo_sucursal, nombre, ciudad, zona) VALUES
+(1, 'F001', 'Farmacia Central', 'Caracas', 'Gran Caracas'),
+(2, 'F002', 'Farmacia Las Mercedes', 'Caracas', 'Gran Caracas'),
+(3, 'F003', 'Farmacia Bella Vista', 'Maracaibo', 'Occidente'),
+(4, 'F004', 'Farmacia Los Sauces', 'Valencia', 'Centro'),
+(5, 'F005', 'Farmacia El Parral', 'Valencia', 'Centro')
+ON DUPLICATE KEY UPDATE nombre=VALUES(nombre), codigo_sucursal=VALUES(codigo_sucursal), zona=VALUES(zona);
 
 -- 2. Maestro de Productos (Muestra representativa de catálogo)
 INSERT INTO maestro_productos (id_producto, codigo_barras, nombre_producto, laboratorio, nombre_proveedor_habitual) VALUES
@@ -26,8 +26,8 @@ INSERT INTO maestro_productos (id_producto, codigo_barras, nombre_producto, labo
 (10, '7591010', 'Cetirizina 10mg x 10 Tab', 'Genven', 'Cobeca')
 ON DUPLICATE KEY UPDATE nombre_producto=VALUES(nombre_producto);
 
--- 3. Ventas Diarias
-INSERT INTO kpi_ventas_diarias (id_sucursal, fecha, total_facturado, cantidad_tickets) VALUES
+-- 3. Ventas Diarias (Facturación y Número de Operaciones por Farmacia)
+INSERT INTO kpi_ventas_diarias (id_sucursal, fecha, total_facturado, numero_operaciones) VALUES
 (1, CURDATE() - INTERVAL 2 DAY, 3450.80, 115),
 (1, CURDATE() - INTERVAL 1 DAY, 4120.50, 130),
 (1, CURDATE(), 2980.00, 95),
@@ -37,7 +37,7 @@ INSERT INTO kpi_ventas_diarias (id_sucursal, fecha, total_facturado, cantidad_ti
 (3, CURDATE(), 2100.00, 70),
 (4, CURDATE(), 1850.00, 60),
 (5, CURDATE(), 2300.00, 75)
-ON DUPLICATE KEY UPDATE total_facturado=VALUES(total_facturado);
+ON DUPLICATE KEY UPDATE total_facturado=VALUES(total_facturado), numero_operaciones=VALUES(numero_operaciones);
 
 -- 4. Inventario y Quiebres (con costo_unitario)
 INSERT INTO kpi_inventario_sucursal (id_sucursal, id_producto, stock_actual, stock_minimo, costo_unitario) VALUES

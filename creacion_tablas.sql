@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS sucursales (
     codigo_sucursal VARCHAR(4) NOT NULL UNIQUE, -- Código alfanumérico único de 4 caracteres (Ej: S001, MCY1, CCS2)
     nombre VARCHAR(100) NOT NULL,
     ciudad VARCHAR(50),
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    zona VARCHAR(50) NOT NULL DEFAULT 'Centro',  -- Clasificación de Zona (Ej: Gran Caracas, Centro, Occidente, Oriente, Los Andes)
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_sucursal_zona (zona)
 );
 
 -- 2. TABLA MAESTRA DE PRODUCTOS (Normalizada y sin proveedor fijo)
@@ -23,14 +25,14 @@ CREATE TABLE IF NOT EXISTS maestro_productos (
     INDEX idx_maestro_lab (laboratorio)
 );
 
--- 3. KPI: Ventas Diarias Globales (Facturación General y Ticket Promedio)
+-- 3. KPI: Ventas Diarias Globales (Facturación General y Ticket Promedio por Farmacia)
 CREATE TABLE IF NOT EXISTS kpi_ventas_diarias (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     fecha DATE NOT NULL,
     total_facturado DECIMAL(12, 2) NOT NULL,    -- Ventas brutas del día
-    cantidad_tickets INT NOT NULL,              -- Transacciones/clientes atendidos
-    ticket_promedio DECIMAL(10, 2) GENERATED ALWAYS AS (total_facturado / cantidad_tickets) STORED,
+    numero_operaciones INT NOT NULL,            -- Cantidad total de tickets / operaciones / ventas de la farmacia
+    ticket_promedio DECIMAL(10, 2) GENERATED ALWAYS AS (total_facturado / numero_operaciones) STORED,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
     UNIQUE KEY uq_sucursal_fecha (id_sucursal, fecha)
