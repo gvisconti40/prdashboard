@@ -83,33 +83,33 @@ def generar_datos_prueba():
     ]
     df_clientes = pd.DataFrame(clientes)
 
-    # 6. Maestro Productos (con codigo_articulo de 30 chars, id_linea, id_laboratorio)
+    # 6. Maestro Productos (con codigo_articulo de 30 chars, codigo_barras >= 15 chars, id_linea, id_laboratorio)
     productos = [
-        (1, "ART-CARDIO-00001", "7591001", "Atorvastatina 20mg x 30 Tab", 1, 1),
-        (2, "ART-CARDIO-00002", "7591002", "Losartán Potásico 50mg x 30 Comp", 1, 3),
-        (3, "ART-ANTI-000001",  "7591003", "Amoxicilina + Ác. Clavulánico 875mg", 2, 5),
-        (4, "ART-ANALG-00001",  "7591004", "Ibuprofeno 400mg x 20 Cáps", 3, 2),
-        (5, "ART-ANALG-00002",  "7591005", "Paracetamol 500mg x 20 Tab", 3, 3),
-        (6, "ART-GASTRO-0001",  "7591006", "Omeprazol 20mg x 28 Cáps", 4, 4),
-        (7, "ART-VITAM-00001",  "7591007", "Vitamina C 1000mg Efervescente", 5, 2),
-        (8, "ART-ENDOC-00001",  "7591008", "Metformina 850mg x 30 Tab", 7, 6),
-        (9, "ART-RESP-000001",  "7591009", "Loratadina 10mg x 10 Tab", 6, 4),
-        (10, "ART-RESP-000002", "7591010", "Cetirizina 10mg x 10 Tab", 6, 5),
-        (11, "ART-ANALG-00003", "7591011", "Diclofenac Sódico 50mg x 20 Tab", 3, 7),
-        (12, "ART-CARDIO-00003", "7591012", "Enalapril 20mg x 30 Tab", 1, 3),
-        (13, "ART-ANTI-000002",  "7591013", "Azitromicina 500mg x 3 Tab", 2, 1),
-        (14, "ART-VITAM-00002",  "7591014", "Complejo B Forte x 30 Grageas", 5, 2),
-        (15, "ART-ANTI-000003",  "7591015", "Ciprofloxacina 500mg x 10 Tab", 2, 5),
-        (16, "ART-GASTRO-0002",  "7591016", "Pantoprazol 40mg x 14 Tab", 4, 6),
-        (17, "ART-ENDOC-00002",  "7591017", "Levotiroxina 100mcg x 50 Tab", 7, 6),
-        (18, "ART-RESP-000003",  "7591018", "Salbutamol Inhalador 100mcg", 6, 8),
-        (19, "ART-CARDIO-00004", "7591019", "Clopidogrel 75mg x 28 Tab", 1, 8),
-        (20, "ART-ANALG-00004",  "7591020", "Ketoprofeno 100mg x 24 Cáps", 3, 4),
-        (21, "ART-RESP-000004",  "7591021", "Desloratadina 5mg x 10 Tab", 6, 1),
-        (22, "ART-VITAM-00003",  "7591022", "Ácido Fólico 5mg x 30 Tab", 5, 3),
-        (23, "ART-ANTI-000004",  "7591023", "Fluconazol 150mg x 2 Cáps", 2, 1),
-        (24, "ART-ENDOC-00003",  "7591024", "Glimepirida 4mg x 30 Tab", 7, 8),
-        (25, "ART-VITAM-00004",  "7591025", "Calcio + Vitamina D3 x 60 Tab", 5, 2)
+        (1, "ART-CARDIO-00001", "759100100000015", "Atorvastatina 20mg x 30 Tab", 1, 1),
+        (2, "ART-CARDIO-00002", "759100200000025", "Losartán Potásico 50mg x 30 Comp", 1, 3),
+        (3, "ART-ANTI-000001",  "759100300000035", "Amoxicilina + Ác. Clavulánico 875mg", 2, 5),
+        (4, "ART-ANALG-00001",  "759100400000045", "Ibuprofeno 400mg x 20 Cáps", 3, 2),
+        (5, "ART-ANALG-00002",  "759100500000055", "Paracetamol 500mg x 20 Tab", 3, 3),
+        (6, "ART-GASTRO-0001",  "759100600000065", "Omeprazol 20mg x 28 Cáps", 4, 4),
+        (7, "ART-VITAM-00001",  "759100700000075", "Vitamina C 1000mg Efervescente", 5, 2),
+        (8, "ART-ENDOC-00001",  "759100800000085", "Metformina 850mg x 30 Tab", 7, 6),
+        (9, "ART-RESP-000001",  "759100900000095", "Loratadina 10mg x 10 Tab", 6, 4),
+        (10, "ART-RESP-000002", "759101000000105", "Cetirizina 10mg x 10 Tab", 6, 5),
+        (11, "ART-ANALG-00003", "759101100000115", "Diclofenac Sódico 50mg x 20 Tab", 3, 7),
+        (12, "ART-CARDIO-00003", "759101200000125", "Enalapril 20mg x 30 Tab", 1, 3),
+        (13, "ART-ANTI-000002",  "759101300000135", "Azitromicina 500mg x 3 Tab", 2, 1),
+        (14, "ART-VITAM-00002",  "759101400000145", "Complejo B Forte x 30 Grageas", 5, 2),
+        (15, "ART-ANTI-000003",  "759101500000155", "Ciprofloxacina 500mg x 10 Tab", 2, 5),
+        (16, "ART-GASTRO-0002",  "759101600000165", "Pantoprazol 40mg x 14 Tab", 4, 6),
+        (17, "ART-ENDOC-00002",  "759101700000175", "Levotiroxina 100mcg x 50 Tab", 7, 6),
+        (18, "ART-RESP-000003",  "759101800000185", "Salbutamol Inhalador 100mcg", 6, 8),
+        (19, "ART-CARDIO-00004", "759101900000195", "Clopidogrel 75mg x 28 Tab", 1, 8),
+        (20, "ART-ANALG-00004",  "759102000000205", "Ketoprofeno 100mg x 24 Cáps", 3, 4),
+        (21, "ART-RESP-000004",  "759102100000215", "Desloratadina 5mg x 10 Tab", 6, 1),
+        (22, "ART-VITAM-00003",  "759102200000225", "Ácido Fólico 5mg x 30 Tab", 5, 3),
+        (23, "ART-ANTI-000004",  "759102300000235", "Fluconazol 150mg x 2 Cáps", 2, 1),
+        (24, "ART-ENDOC-00003",  "759102400000245", "Glimepirida 4mg x 30 Tab", 7, 8),
+        (25, "ART-VITAM-00004",  "759102500000255", "Calcio + Vitamina D3 x 60 Tab", 5, 2)
     ]
     df_prod = pd.DataFrame(productos, columns=["id_producto", "codigo_articulo", "codigo_barras", "nombre_producto", "id_linea", "id_laboratorio"])
     df_prod = df_prod.merge(df_lineas[["id_linea", "codigo_linea", "descripcion_linea"]], on="id_linea")
@@ -147,21 +147,25 @@ def generar_datos_prueba():
                 })
     df_vta_prod = pd.DataFrame(filas_prod_vta)
 
-    # 9. Inventario (con costo unitario)
+    # 9. Inventario (con costo unitario y precio unitario de venta)
     costos_base = {1: 8.50, 2: 4.20, 3: 12.00, 4: 3.80, 5: 2.10, 6: 5.60, 7: 6.90, 8: 4.50, 9: 2.80, 10: 3.10}
+    precios_base = {1: 15.00, 2: 8.00, 3: 25.00, 4: 8.00, 5: 5.00, 6: 12.00, 7: 15.00, 8: 10.00, 9: 6.00, 10: 7.50}
     filas_inv = []
     for suc in sucursales:
         for _, p in df_prod.iterrows():
             min_stk = random.randint(15, 40)
             act_stk = random.choice([0, random.randint(1, min_stk - 1), random.randint(min_stk, 120)])
             c_unit = costos_base.get(p["id_producto"], round(random.uniform(2.5, 11.0), 2))
+            p_unit = precios_base.get(p["id_producto"], round(c_unit * random.uniform(1.35, 1.70), 2))
             filas_inv.append({
                 "id_sucursal": suc["id_sucursal"],
                 "id_producto": p["id_producto"],
                 "stock_actual": act_stk,
                 "stock_minimo": min_stk,
                 "costo_unitario": c_unit,
-                "valor_total_inventario": round(act_stk * c_unit, 2)
+                "precio_unitario": p_unit,
+                "valor_total_inventario": round(act_stk * c_unit, 2),
+                "valor_venta_inventario": round(act_stk * p_unit, 2)
             })
     df_inv = pd.DataFrame(filas_inv)
 
@@ -568,29 +572,50 @@ with tab_ventas:
 
     col_prod, col_lab = st.columns([3, 2])
     with col_prod:
-        st.markdown("#### 🏆 Top 20 Productos Más Vendidos")
+        col_t_top, col_c_crit = st.columns([2, 1])
+        with col_t_top:
+            st.markdown("#### 🏆 Top 20 Productos Más Vendidos")
+        with col_c_crit:
+            criterio_orden = st.selectbox(
+                "Ordenar Top 20 por:",
+                options=["Total Facturado ($)", "Unidades Vendidas"],
+                index=0,
+                key="criterio_top20_ventas"
+            )
+
         if not df_v_prod.empty:
             df_top_p = df_v_prod.groupby(["codigo_articulo", "nombre_producto"]).agg(
                 total_venta_monto=("total_venta_monto", "sum"),
                 unidades=("unidades_vendidas", "sum")
             ).reset_index()
-            df_top_p = df_top_p.sort_values("total_venta_monto", ascending=False).head(20)
+
+            if criterio_orden == "Total Facturado ($)":
+                df_top_p = df_top_p.sort_values("total_venta_monto", ascending=False).head(20)
+                eje_x = "total_venta_monto"
+                etiqueta_x = "Venta Total ($)"
+                paleta_color = "Teal"
+            else:
+                df_top_p = df_top_p.sort_values("unidades", ascending=False).head(20)
+                eje_x = "unidades"
+                etiqueta_x = "Unidades Vendidas"
+                paleta_color = "Blues"
+
             fig_p = px.bar(
                 df_top_p, 
-                x="total_venta_monto", 
+                x=eje_x, 
                 y="nombre_producto", 
                 orientation="h",
-                labels={"total_venta_monto": "Monto ($)", "nombre_producto": "Producto"},
-                color="total_venta_monto",
-                color_continuous_scale="Teal",
-                custom_data=["codigo_articulo", "unidades"],
+                labels={eje_x: etiqueta_x, "nombre_producto": "Producto"},
+                color=eje_x,
+                color_continuous_scale=paleta_color,
+                custom_data=["codigo_articulo", "unidades", "total_venta_monto"],
                 height=650
             )
             fig_p.update_traces(
                 hovertemplate="<b>Producto:</b> %{y}<br>" +
                               "<b>Cód. Artículo:</b> %{customdata[0]}<br>" +
-                              "<b>Venta Total:</b> $%{x:,.2f}<br>" +
-                              "<b>Unidades:</b> %{customdata[1]:,}<extra></extra>"
+                              "<b>Total Facturado:</b> $%{customdata[2]:,.2f}<br>" +
+                              "<b>Unidades Vendidas:</b> %{customdata[1]:,}<extra></extra>"
             )
             fig_p.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig_p, use_container_width=True)
@@ -704,26 +729,47 @@ with tab_compras:
             st.info("Sin compras registradas para estos filtros.")
 
     with col_c_der:
-        st.markdown("#### 🚚 Top 5 Compras por Droguería / Proveedor")
+        col_t_prov, col_c_crit_prov = st.columns([2, 1])
+        with col_t_prov:
+            st.markdown("#### 🚚 Top 5 Droguerías")
+        with col_c_crit_prov:
+            criterio_orden_prov = st.selectbox(
+                "Ordenar por:",
+                options=["Inversión Total ($)", "Unidades Compradas"],
+                index=0,
+                key="criterio_prov_compras"
+            )
+
         if not df_comp.empty:
             df_c_prov = df_comp.groupby(["codigo_proveedor", "nombre_proveedor"]).agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
             ).reset_index()
-            df_top5_prov = df_c_prov.sort_values("total_compra_monto", ascending=False).head(5)
+
+            if criterio_orden_prov == "Inversión Total ($)":
+                df_top5_prov = df_c_prov.sort_values("total_compra_monto", ascending=False).head(5)
+                eje_x_prov = "total_compra_monto"
+                lbl_x_prov = "Inversión ($)"
+                paleta_prov = "Oranges"
+            else:
+                df_top5_prov = df_c_prov.sort_values("unidades_compradas", ascending=False).head(5)
+                eje_x_prov = "unidades_compradas"
+                lbl_x_prov = "Unidades Compradas"
+                paleta_prov = "YlOrBr"
+
             fig_cp = px.bar(
                 df_top5_prov,
-                x="total_compra_monto",
+                x=eje_x_prov,
                 y="nombre_proveedor",
                 orientation="h",
-                labels={"total_compra_monto": "Inversión ($)", "nombre_proveedor": "Droguería"},
-                color="total_compra_monto",
-                color_continuous_scale="Oranges",
-                custom_data=["codigo_proveedor", "unidades_compradas"]
+                labels={eje_x_prov: lbl_x_prov, "nombre_proveedor": "Droguería"},
+                color=eje_x_prov,
+                color_continuous_scale=paleta_prov,
+                custom_data=["codigo_proveedor", "unidades_compradas", "total_compra_monto"]
             )
             fig_cp.update_traces(
                 hovertemplate="<b>Droguería:</b> %{y} [%{customdata[0]}]<br>" +
-                              "<b>Inversión Total:</b> $%{x:,.2f}<br>" +
+                              "<b>Inversión Total:</b> $%{customdata[2]:,.2f}<br>" +
                               "<b>Unidades Adquiridas:</b> %{customdata[1]:,}<extra></extra>"
             )
             fig_cp.update_layout(yaxis={'categoryorder':'total ascending'})
@@ -733,29 +779,50 @@ with tab_compras:
 
     st.divider()
 
-    # Compras por Laboratorio
+    # Compras por Laboratorio (con selector de ordenamiento)
     col_c_lab_bar, col_c_lab_pie = st.columns([3, 2])
     with col_c_lab_bar:
-        st.markdown("#### 🧪 Compras por Laboratorio / Fabricante")
+        col_t_lab_c, col_c_crit_lab = st.columns([2, 1])
+        with col_t_lab_c:
+            st.markdown("#### 🧪 Compras por Laboratorio")
+        with col_c_crit_lab:
+            criterio_orden_lab = st.selectbox(
+                "Ordenar por:",
+                options=["Inversión Total ($)", "Unidades Compradas"],
+                index=0,
+                key="criterio_lab_compras"
+            )
+
         if not df_comp.empty:
             df_c_lab = df_comp.groupby("nombre_laboratorio").agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
-            ).reset_index().sort_values("total_compra_monto", ascending=False)
+            ).reset_index()
+
+            if criterio_orden_lab == "Inversión Total ($)":
+                df_c_lab_ordenado = df_c_lab.sort_values("total_compra_monto", ascending=False)
+                eje_x_lab = "total_compra_monto"
+                lbl_x_lab = "Inversión ($)"
+                paleta_lab = "Viridis"
+            else:
+                df_c_lab_ordenado = df_c_lab.sort_values("unidades_compradas", ascending=False)
+                eje_x_lab = "unidades_compradas"
+                lbl_x_lab = "Unidades Compradas"
+                paleta_lab = "Purples"
 
             fig_clab = px.bar(
-                df_c_lab,
-                x="total_compra_monto",
+                df_c_lab_ordenado,
+                x=eje_x_lab,
                 y="nombre_laboratorio",
                 orientation="h",
-                labels={"total_compra_monto": "Inversión ($)", "nombre_laboratorio": "Laboratorio"},
-                color="total_compra_monto",
-                color_continuous_scale="Viridis",
-                custom_data=["unidades_compradas"]
+                labels={eje_x_lab: lbl_x_lab, "nombre_laboratorio": "Laboratorio"},
+                color=eje_x_lab,
+                color_continuous_scale=paleta_lab,
+                custom_data=["unidades_compradas", "total_compra_monto"]
             )
             fig_clab.update_traces(
                 hovertemplate="<b>Laboratorio:</b> %{y}<br>" +
-                              "<b>Inversión Total:</b> $%{x:,.2f}<br>" +
+                              "<b>Inversión Total:</b> $%{customdata[1]:,.2f}<br>" +
                               "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
             )
             fig_clab.update_layout(yaxis={'categoryorder':'total ascending'})
@@ -813,16 +880,19 @@ with tab_inventario:
 
     tot_unidades_stock = df_inv["stock_actual"].sum() if not df_inv.empty else 0
     tot_valor_inventario = df_inv["valor_total_inventario"].sum() if not df_inv.empty else 0
+    tot_valor_pvp = df_inv["valor_venta_inventario"].sum() if "valor_venta_inventario" in df_inv and not df_inv.empty else 0
+    margen_potencial = ((tot_valor_pvp - tot_valor_inventario) / tot_valor_pvp * 100) if tot_valor_pvp > 0 else 0
 
     df_quiebres = df_inv[df_inv["stock_actual"] <= df_inv["stock_minimo"]].copy()
     df_quiebres["faltante"] = df_quiebres["stock_minimo"] - df_quiebres["stock_actual"]
     df_quiebres = df_quiebres.sort_values("faltante", ascending=False)
 
-    col_inv1, col_inv2, col_inv3, col_inv4 = st.columns(4)
-    col_inv1.metric("💰 Inventario Valorizado Total", f"${tot_valor_inventario:,.2f}")
-    col_inv2.metric("📦 Unidades Físicas en Stock", f"{int(tot_unidades_stock):,}")
-    col_inv3.metric("🚨 Artículos en Quiebre / Mínimo", f"{len(df_quiebres):,}")
-    col_inv4.metric("❌ Artículos Agotados (Stock 0)", f"{len(df_quiebres[df_quiebres['stock_actual'] == 0]):,}")
+    col_inv1, col_inv2, col_inv3, col_inv4, col_inv5 = st.columns(5)
+    col_inv1.metric("💰 Valor Costo Total", f"${tot_valor_inventario:,.2f}")
+    col_inv2.metric("🏷️ Valor a Precio Venta (PVP)", f"${tot_valor_pvp:,.2f}")
+    col_inv3.metric("📈 Margen Bruto Potencial", f"{margen_potencial:.1f}%")
+    col_inv4.metric("📦 Unidades en Stock", f"{int(tot_unidades_stock):,}")
+    col_inv5.metric("🚨 Quiebres de Stock", f"{len(df_quiebres):,}")
 
     st.divider()
 
@@ -878,7 +948,9 @@ with tab_inventario:
         df_inv_articulo = df_inv.groupby(["codigo_articulo", "codigo_barras", "nombre_producto", "descripcion_linea", "nombre_laboratorio"]).agg(
             stock_actual=("stock_actual", "sum"),
             costo_unitario=("costo_unitario", "mean"),
-            monto_valorizado=("valor_total_inventario", "sum")
+            precio_unitario=("precio_unitario", "mean"),
+            monto_valorizado=("valor_total_inventario", "sum"),
+            monto_pvp=("valor_venta_inventario", "sum")
         ).reset_index().sort_values("monto_valorizado", ascending=False)
 
         st.dataframe(
@@ -891,10 +963,120 @@ with tab_inventario:
                 "descripcion_linea": "Línea",
                 "nombre_laboratorio": "Laboratorio",
                 "stock_actual": st.column_config.NumberColumn("Stock Disponible", format="%d"),
-                "costo_unitario": st.column_config.NumberColumn("Costo Unit. Prom.", format="$%.2f"),
-                "monto_valorizado": st.column_config.NumberColumn("Total Valorizado ($)", format="$%.2f")
+                "costo_unitario": st.column_config.NumberColumn("Costo Unit.", format="$%.2f"),
+                "precio_unitario": st.column_config.NumberColumn("Precio Venta", format="$%.2f"),
+                "monto_valorizado": st.column_config.NumberColumn("Valor Costo ($)", format="$%.2f"),
+                "monto_pvp": st.column_config.NumberColumn("Valor PVP ($)", format="$%.2f")
             }
         )
+
+    st.divider()
+
+    # --- NUEVO MÓDULO: COMPARADOR DE PRECIOS Y STOCK ENTRE SUCURSALES ---
+    st.markdown("#### 🔍 Comparador de Precios y Stock entre Sucursales")
+    st.caption("Auditoría de dispersión de precios, costos, márgenes y disponibilidad física en toda la red de farmacias.")
+
+    if not df_inv.empty:
+        # Buscador predictivo optimizado para 40.000 artículos
+        col_b_txt, col_b_sel = st.columns([1, 2])
+        
+        with col_b_txt:
+            termino_busqueda = st.text_input(
+                "🔎 Buscar por Nombre, Código o Barra:",
+                value="",
+                placeholder="Ej: Atorvastatina, Losartan, 7591001...",
+                key="filtro_busqueda_art_comp",
+                help="Escribe parte del nombre del medicamento o su código para filtrar el catálogo rápidamente."
+            ).strip().lower()
+
+        # Filtrar el universo de artículos según el término escrito
+        df_art_unicos = df_inv[["codigo_articulo", "codigo_barras", "nombre_producto", "nombre_laboratorio"]].drop_duplicates()
+        
+        if termino_busqueda:
+            mask_busqueda = (
+                df_art_unicos["nombre_producto"].str.lower().str.contains(termino_busqueda, na=False) |
+                df_art_unicos["codigo_articulo"].str.lower().str.contains(termino_busqueda, na=False) |
+                df_art_unicos["codigo_barras"].str.lower().str.contains(termino_busqueda, na=False) |
+                df_art_unicos["nombre_laboratorio"].str.lower().str.contains(termino_busqueda, na=False)
+            )
+            df_art_filtrados = df_art_unicos[mask_busqueda].sort_values("nombre_producto").head(50)
+        else:
+            # Mostrar los primeros 50 ordenados para que no colapse la interfaz si no ha escrito nada
+            df_art_filtrados = df_art_unicos.sort_values("nombre_producto").head(50)
+
+        with col_b_sel:
+            if not df_art_filtrados.empty:
+                dict_articulos = {
+                    f"{row['nombre_producto']} [{row['codigo_articulo']}] - {row['nombre_laboratorio']}": row["codigo_articulo"] 
+                    for _, row in df_art_filtrados.iterrows()
+                }
+                art_seleccionado_label = st.selectbox(
+                    f"Seleccionar Artículo Coincidente ({len(df_art_filtrados)} encontrados):",
+                    options=list(dict_articulos.keys()),
+                    key="comparador_art_inv"
+                )
+                cod_art_comparar = dict_articulos[art_seleccionado_label]
+            else:
+                st.warning("No se encontraron artículos que coincidan con la búsqueda.")
+                cod_art_comparar = None
+
+        # Si hay un artículo seleccionado, procesar comparativa
+        if cod_art_comparar:
+            df_comp_art = df_inv[df_inv["codigo_articulo"] == cod_art_comparar].copy()
+
+            if not df_comp_art.empty:
+                p_min = df_comp_art["precio_unitario"].min()
+                p_max = df_comp_art["precio_unitario"].max()
+                p_avg = df_comp_art["precio_unitario"].mean()
+                stock_red = df_comp_art["stock_actual"].sum()
+                suc_con_quiebre = len(df_comp_art[df_comp_art["stock_actual"] <= df_comp_art["stock_minimo"]])
+
+                col_cp1, col_cp2, col_cp3, col_cp4, col_cp5 = st.columns(5)
+                col_cp1.metric("Precio Mínimo en Red", f"${p_min:,.2f}")
+                col_cp2.metric("Precio Máximo en Red", f"${p_max:,.2f}")
+                col_cp3.metric("Precio Promedio", f"${p_avg:,.2f}")
+                col_cp4.metric("Stock Total en Red", f"{int(stock_red):,} uds")
+                col_cp5.metric("Sucursales en Riesgo/Quiebre", f"{suc_con_quiebre} de {len(df_comp_art)}")
+
+                # Gráfica de barras comparativa de Precios por Sucursal
+                col_g_comp, col_t_comp = st.columns([3, 2])
+                with col_g_comp:
+                    fig_comp_p = px.bar(
+                        df_comp_art.sort_values("precio_unitario", ascending=False),
+                        x="precio_unitario",
+                        y="nombre",
+                        orientation="h",
+                        labels={"precio_unitario": "Precio Venta ($)", "nombre": "Farmacia / Sucursal"},
+                        title=f"Comparativa de PVP por Farmacia - {art_seleccionado_label}",
+                        color="precio_unitario",
+                        color_continuous_scale="Viridis",
+                        custom_data=["costo_unitario", "stock_actual"]
+                    )
+                    fig_comp_p.update_traces(
+                        hovertemplate="<b>Farmacia:</b> %{y}<br>" +
+                                      "<b>Precio PVP:</b> $%{x:,.2f}<br>" +
+                                      "<b>Costo Reposición:</b> $%{customdata[0]:,.2f}<br>" +
+                                      "<b>Stock Disponible:</b> %{customdata[1]} uds<extra></extra>"
+                    )
+                    fig_comp_p.update_layout(yaxis={'categoryorder':'total ascending'})
+                    st.plotly_chart(fig_comp_p, use_container_width=True)
+
+                with col_t_comp:
+                    st.markdown("##### Desglose por Farmacia")
+                    tabla_comparativa = df_comp_art[["nombre", "zona", "costo_unitario", "precio_unitario", "stock_actual", "stock_minimo"]].copy()
+                    tabla_comparativa["margen_pct"] = round((tabla_comparativa["precio_unitario"] - tabla_comparativa["costo_unitario"]) / tabla_comparativa["precio_unitario"] * 100, 1)
+                    
+                    st.dataframe(
+                        tabla_comparativa.rename(columns={"nombre": "Sucursal", "zona": "Zona"}),
+                        use_container_width=True,
+                        column_config={
+                            "costo_unitario": st.column_config.NumberColumn("Costo", format="$%.2f"),
+                            "precio_unitario": st.column_config.NumberColumn("PVP", format="$%.2f"),
+                            "margen_pct": st.column_config.NumberColumn("Margen %", format="%.1f%%"),
+                            "stock_actual": st.column_config.NumberColumn("Stock", format="%d"),
+                            "stock_minimo": st.column_config.NumberColumn("Mín.", format="%d")
+                        }
+                    )
 
     st.divider()
 

@@ -54,19 +54,19 @@ INSERT INTO maestro_clientes (id_cliente, codigo_cliente, nombre_cliente, tipo_c
 (6, 'CLI0000006', 'Banesco Seguros', 'Seguro / Empresa', 'J-29837192-3')
 ON DUPLICATE KEY UPDATE nombre_cliente=VALUES(nombre_cliente);
 
--- 6. Maestro Productos (Código de artículo 30 chars, enlazado a línea y lab)
+-- 6. Maestro Productos (Código de artículo 30 chars, código de barras >= 15 chars, enlazado a línea y lab)
 INSERT INTO maestro_productos (id_producto, codigo_articulo, codigo_barras, nombre_producto, id_linea, id_laboratorio) VALUES
-(1, 'ART-CARDIO-00001', '7591001', 'Atorvastatina 20mg x 30 Tab', 1, 1),
-(2, 'ART-CARDIO-00002', '7591002', 'Losartán Potásico 50mg x 30 Comp', 1, 3),
-(3, 'ART-ANTI-000001',  '7591003', 'Amoxicilina + Ác. Clavulánico 875mg', 2, 5),
-(4, 'ART-ANALG-00001',  '7591004', 'Ibuprofeno 400mg x 20 Cáps', 3, 2),
-(5, 'ART-ANALG-00002',  '7591005', 'Paracetamol 500mg x 20 Tab', 3, 3),
-(6, 'ART-GASTRO-0001',  '7591006', 'Omeprazol 20mg x 28 Cáps', 4, 4),
-(7, 'ART-VITAM-00001',  '7591007', 'Vitamina C 1000mg Efervescente', 5, 2),
-(8, 'ART-ENDOC-00001',  '7591008', 'Metformina 850mg x 30 Tab', 7, 6),
-(9, 'ART-RESP-000001',  '7591009', 'Loratadina 10mg x 10 Tab', 6, 4),
-(10, 'ART-RESP-000002', '7591010', 'Cetirizina 10mg x 10 Tab', 6, 5)
-ON DUPLICATE KEY UPDATE nombre_producto=VALUES(nombre_producto);
+(1, 'ART-CARDIO-00001', '759100100000015', 'Atorvastatina 20mg x 30 Tab', 1, 1),
+(2, 'ART-CARDIO-00002', '759100200000025', 'Losartán Potásico 50mg x 30 Comp', 1, 3),
+(3, 'ART-ANTI-000001',  '759100300000035', 'Amoxicilina + Ác. Clavulánico 875mg', 2, 5),
+(4, 'ART-ANALG-00001',  '759100400000045', 'Ibuprofeno 400mg x 20 Cáps', 3, 2),
+(5, 'ART-ANALG-00002',  '759100500000055', 'Paracetamol 500mg x 20 Tab', 3, 3),
+(6, 'ART-GASTRO-0001',  '759100600000065', 'Omeprazol 20mg x 28 Cáps', 4, 4),
+(7, 'ART-VITAM-00001',  '759100700000075', 'Vitamina C 1000mg Efervescente', 5, 2),
+(8, 'ART-ENDOC-00001',  '759100800000085', 'Metformina 850mg x 30 Tab', 7, 6),
+(9, 'ART-RESP-000001',  '759100900000095', 'Loratadina 10mg x 10 Tab', 6, 4),
+(10, 'ART-RESP-000002', '759101000000105', 'Cetirizina 10mg x 10 Tab', 6, 5)
+ON DUPLICATE KEY UPDATE nombre_producto=VALUES(nombre_producto), codigo_barras=VALUES(codigo_barras);
 
 -- 7. Ventas Diarias
 INSERT INTO kpi_ventas_diarias (id_sucursal, fecha, total_facturado, numero_operaciones) VALUES

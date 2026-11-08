@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS maestro_clientes (
 CREATE TABLE IF NOT EXISTS maestro_productos (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
     codigo_articulo VARCHAR(30) NOT NULL UNIQUE,  -- Código interno de artículo de hasta 30 caracteres
-    codigo_barras VARCHAR(50) NOT NULL UNIQUE,    -- Código de barras comercial
+    codigo_barras VARCHAR(50),                    -- Código de barras comercial (flexible, sin longitud mínima)
     nombre_producto VARCHAR(150) NOT NULL,        -- Descripción del producto
     id_linea INT NOT NULL,                        -- Enlace al maestro de líneas
     id_laboratorio INT NOT NULL,                  -- Enlace al maestro de laboratorios
@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS maestro_productos (
     FOREIGN KEY (id_linea) REFERENCES maestro_lineas(id_linea),
     FOREIGN KEY (id_laboratorio) REFERENCES maestro_laboratorios(id_laboratorio),
     INDEX idx_prod_linea (id_linea),
-    INDEX idx_prod_lab (id_laboratorio)
+    INDEX idx_prod_lab (id_laboratorio),
+    INDEX idx_prod_barras (codigo_barras)
 );
 
 -- 7. KPI: Ventas Diarias Globales por Farmacia
@@ -81,15 +82,17 @@ CREATE TABLE IF NOT EXISTS kpi_ventas_diarias (
     UNIQUE KEY uq_sucursal_fecha (id_sucursal, fecha)
 );
 
--- 8. KPI: Inventario de Productos por Sucursal (Con Costo Unitario para Valorización)
+-- 8. KPI: Inventario de Productos por Sucursal (Con Costo Unitario y Precio de Venta)
 CREATE TABLE IF NOT EXISTS kpi_inventario_sucursal (
     id_inventario BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     id_producto INT NOT NULL,                     -- Enlace numérico al maestro de productos
     stock_actual INT NOT NULL DEFAULT 0,
     stock_minimo INT NOT NULL DEFAULT 0,          -- Umbral por farmacia
-    costo_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0.00, -- Costo de adquisición/reposición
+    costo_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0.00,  -- Costo de adquisición/reposición
+    precio_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0.00, -- Precio de venta al público (PVP)
     valor_total_inventario DECIMAL(12, 2) GENERATED ALWAYS AS (stock_actual * costo_unitario) STORED,
+    valor_venta_inventario DECIMAL(12, 2) GENERATED ALWAYS AS (stock_actual * precio_unitario) STORED,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
     FOREIGN KEY (id_producto) REFERENCES maestro_productos(id_producto),
