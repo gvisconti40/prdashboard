@@ -69,13 +69,17 @@ CREATE TABLE IF NOT EXISTS maestro_productos (
     INDEX idx_prod_barras (codigo_barras)
 );
 
--- 7. KPI: Ventas Diarias Globales por Farmacia
+-- 7. KPI: Ventas Diarias Globales por Farmacia (Discriminando Contado y Crédito con Operaciones)
 CREATE TABLE IF NOT EXISTS kpi_ventas_diarias (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     fecha DATE NOT NULL,
-    total_facturado DECIMAL(12, 2) NOT NULL,       -- Ventas brutas del día
+    total_facturado DECIMAL(12, 2) NOT NULL,       -- Ventas brutas totales del día
+    ventas_contado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Ventas cobradas de inmediato (efectivo, tarjeta, pago móvil)
+    ventas_credito DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Ventas a crédito (seguros, convenios empresariales, particulares)
     numero_operaciones INT NOT NULL,               -- Cantidad total de tickets / operaciones / ventas
+    operaciones_contado INT NOT NULL DEFAULT 0,    -- Tickets / transacciones de contado
+    operaciones_credito INT NOT NULL DEFAULT 0,    -- Facturas / operaciones a crédito
     ticket_promedio DECIMAL(10, 2) GENERATED ALWAYS AS (total_facturado / numero_operaciones) STORED,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),

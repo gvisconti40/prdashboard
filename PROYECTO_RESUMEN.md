@@ -39,7 +39,7 @@ Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Strea
 - `maestro_productos`: `id_producto`, `codigo_articulo VARCHAR(30) UNIQUE`, `codigo_barras VARCHAR(50)` (flexible, sin restricción de longitud mínima ni duplicidad forzada), `nombre_producto`, `id_linea`, `id_laboratorio`, `fecha_registro`.
 
 ### 2. Tablas Transaccionales de Rendimiento (KPIs)
-- `kpi_ventas_diarias`: Facturación bruta, **número de operaciones / tickets por farmacia** (`numero_operaciones`) y ticket promedio generado.
+- `kpi_ventas_diarias`: Facturación bruta, **ventas contado** (`ventas_contado`), **ventas crédito** (`ventas_credito`), **número de operaciones / tickets por farmacia** (`numero_operaciones`) y ticket promedio generado.
 - `kpi_inventario_sucursal`: Stock actual, stock mínimo, costo unitario, **precio unitario de venta** (`precio_unitario`), valorización a costo (`valor_total_inventario`) y valorización a precio venta (`valor_venta_inventario`).
 - `kpi_ventas_por_producto`: Salida diaria en unidades y monto por artículo (`id_producto`).
 - `kpi_compras_por_producto`: Compras por artículo (`id_producto`) y droguería (`id_proveedor`) con unidades e inversión.

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import random
@@ -127,17 +128,29 @@ def generar_datos_prueba():
 
     fechas = [hoy - timedelta(days=i) for i in range(30, -1, -1)]
 
-    # 7. Ventas Diarias Globales
+    # 7. Ventas Diarias Globales por Farmacia (Contado vs Crédito y Operaciones)
     filas_vta = []
     for suc in sucursales:
         for f in fechas:
             ops = random.randint(45, 160)
             fact = round(ops * random.uniform(18.5, 38.0), 2)
+            pct_cred = random.uniform(0.15, 0.35) # Entre 15% y 35% en crédito
+            v_cred = round(fact * pct_cred, 2)
+            v_cont = round(fact - v_cred, 2)
+            
+            # Reparto de operaciones contado y crédito
+            ops_cred = max(1, int(round(ops * random.uniform(0.12, 0.28))))
+            ops_cont = ops - ops_cred
+            
             filas_vta.append({
                 "id_sucursal": suc["id_sucursal"],
                 "fecha": f,
                 "total_facturado": fact,
-                "numero_operaciones": ops
+                "ventas_contado": v_cont,
+                "ventas_credito": v_cred,
+                "numero_operaciones": ops,
+                "operaciones_contado": ops_cont,
+                "operaciones_credito": ops_cred
             })
     df_vta_dia = pd.DataFrame(filas_vta)
 
@@ -468,6 +481,8 @@ if modo_datos == "Simulación (Datos de Prueba)":
             total_facturado=("total_venta_monto", "sum"),
             numero_operaciones=("unidades_vendidas", "count")
         ).reset_index()
+        df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.75
+        df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.25
     else:
         df_v_dia = datos["ventas_diarias"]
         df_v_dia = df_v_dia[(df_v_dia["fecha"] >= f_ini) & (df_v_dia["fecha"] <= f_fin)]
@@ -560,31 +575,94 @@ with tab_ventas:
     st.subheader("Resumen Comercial de Ventas")
 
     tot_facturado = df_v_prod["total_venta_monto"].sum() if (filtro_linea_activo or filtro_lab_activo) else (df_v_dia["total_facturado"].sum() if not df_v_dia.empty else 0)
+    tot_contado = df_v_dia["ventas_contado"].sum() if "ventas_contado" in df_v_dia and not df_v_dia.empty else 0
+    tot_credito = df_v_dia["ventas_credito"].sum() if "ventas_credito" in df_v_dia and not df_v_dia.empty else 0
+    pct_contado = (tot_contado / tot_facturado * 100) if tot_facturado > 0 else 0
+    pct_credito = (tot_credito / tot_facturado * 100) if tot_facturado > 0 else 0
+
     tot_unidades = df_v_prod["unidades_vendidas"].sum() if not df_v_prod.empty else 0
     tot_operaciones = df_v_dia["numero_operaciones"].sum() if not df_v_dia.empty else 0
+    tot_ops_contado = df_v_dia["operaciones_contado"].sum() if "operaciones_contado" in df_v_dia and not df_v_dia.empty else 0
+    tot_ops_credito = df_v_dia["operaciones_credito"].sum() if "operaciones_credito" in df_v_dia and not df_v_dia.empty else 0
     ticket_prom = (tot_facturado / tot_operaciones) if tot_operaciones > 0 else 0
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Ventas Totales ($)", f"${tot_facturado:,.2f}")
-    c2.metric("Nº de Operaciones (Tickets)", f"{int(tot_operaciones):,}")
-    c3.metric("Ticket Promedio", f"${ticket_prom:,.2f}")
-    c4.metric("Unidades Vendidas", f"{int(tot_unidades):,}")
+    col_v1, col_v2, col_v3, col_v4, col_v5, col_v6 = st.columns(6)
+    col_v1.metric("Ventas Totales ($)", f"${tot_facturado:,.2f}")
+    col_v2.metric("💵 Ventas Contado", f"${tot_contado:,.2f}", f"{pct_contado:.1f}% ({int(tot_ops_contado):,} ops)")
+    col_v3.metric("📑 Ventas Crédito", f"${tot_credito:,.2f}", f"{pct_credito:.1f}% ({int(tot_ops_credito):,} ops)")
+    col_v4.metric("Nº Operaciones (Tickets)", f"{int(tot_operaciones):,}")
+    col_v5.metric("Ticket Promedio", f"${ticket_prom:,.2f}")
+    col_v6.metric("Unidades Vendidas", f"{int(tot_unidades):,}")
 
     st.divider()
 
-    st.markdown("#### 📈 Evolución Diaria de Ventas")
-    if not df_v_prod.empty:
-        df_dia_agg = df_v_prod.groupby("fecha").agg(
-            monto_vendido=("total_venta_monto", "sum"),
-            unidades=("unidades_vendidas", "sum")
-        ).reset_index()
-        fig_evol = px.line(
-            df_dia_agg, 
-            x="fecha", 
-            y="monto_vendido",
-            labels={"monto_vendido": "Monto Vendido ($)", "fecha": "Fecha"},
-            title="Evolución de Ingresos por Venta",
-            markers=True
+    # Evolución Diaria de Ventas (Desglosando Contado y Crédito)
+    st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito")
+    if not df_v_dia.empty:
+        # Asegurar columnas si vienen de MySQL antiguo
+        if "operaciones_contado" not in df_v_dia:
+            df_v_dia["operaciones_contado"] = 0
+        if "operaciones_credito" not in df_v_dia:
+            df_v_dia["operaciones_credito"] = 0
+
+        df_dia_agg = df_v_dia.groupby("fecha").agg(
+            ventas_contado=("ventas_contado", "sum"),
+            ventas_credito=("ventas_credito", "sum"),
+            total_facturado=("total_facturado", "sum"),
+            numero_operaciones=("numero_operaciones", "sum"),
+            operaciones_contado=("operaciones_contado", "sum"),
+            operaciones_credito=("operaciones_credito", "sum")
+        ).reset_index().sort_values("fecha")
+
+        custom_info = list(zip(
+            df_dia_agg["total_facturado"],
+            df_dia_agg["numero_operaciones"],
+            df_dia_agg["ventas_contado"],
+            df_dia_agg["operaciones_contado"],
+            df_dia_agg["ventas_credito"],
+            df_dia_agg["operaciones_credito"]
+        ))
+
+        fig_evol = go.Figure()
+
+        # Barra Contado
+        fig_evol.add_trace(go.Bar(
+            x=df_dia_agg["fecha"],
+            y=df_dia_agg["ventas_contado"],
+            name="💵 Venta Contado",
+            marker_color="#2ecc71",
+            customdata=custom_info,
+            hovertemplate="💵 <b>Contado:</b> $%{y:,.2f} (%{customdata[3]:,} ops)<extra></extra>"
+        ))
+
+        # Barra Crédito
+        fig_evol.add_trace(go.Bar(
+            x=df_dia_agg["fecha"],
+            y=df_dia_agg["ventas_credito"],
+            name="📑 Venta Crédito",
+            marker_color="#3498db",
+            customdata=custom_info,
+            hovertemplate="📑 <b>Crédito:</b> $%{y:,.2f} (%{customdata[5]:,} ops)<extra></extra>"
+        ))
+
+        # Punto invisible para totalizar el día en el hover unificado
+        fig_evol.add_trace(go.Scatter(
+            x=df_dia_agg["fecha"],
+            y=df_dia_agg["total_facturado"],
+            name="Total Facturado",
+            mode="markers",
+            marker=dict(size=0, opacity=0),
+            customdata=custom_info,
+            hovertemplate="📊 <b>Total Facturado Día:</b> $%{y:,.2f} (%{customdata[1]:,} ops)<extra></extra>"
+        ))
+
+        fig_evol.update_layout(
+            title="Facturación Diaria por Modalidad de Cobro",
+            barmode="stack",
+            hovermode="x unified",
+            xaxis_title="Fecha",
+            yaxis_title="Monto Facturado ($)",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig_evol, use_container_width=True)
     else:
