@@ -1,23 +1,23 @@
-# 💊 KPI Dashboard - Red de Farmacias
-**Fecha de última sesión:** 07 de Noviembre de 2026
+# 💊 KPI Dashboard - Grupo San Anselmo
+**Fecha de última sesión:** 09 de Noviembre de 2026
 
 ---
 
 ## 📌 Contexto General del Proyecto
-Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Streamlit** conectado a **MySQL** (con modo de simulación offline integrado). Diseñado para una cadena de más de **35 farmacias** y un catálogo maestro de más de **40.000 artículos**.
+Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Streamlit** para el **Grupo San Anselmo**, conectado a **MySQL** (con modo de simulación offline integrado). Diseñado para una cadena de más de **35 farmacias** y un catálogo maestro de más de **40.000 artículos**.
 
 - **Ubicación física del proyecto**: `C:\Users\Windows\.gemini\antigravity\scratch\dashboard-mysql`
 - **Archivo principal del Dashboard**: `app.py`
 - **Script de Creación de Base de Datos**: `creacion_tablas.sql`
 - **Script de Datos de Prueba (Seed)**: `datos_prueba.sql`
-- **Scripts de Sincronización VFP 9 (SPT con Tablas Temporales en Memoria)**:
+- **Suite de Scripts VFP 9 (SPT con Tablas Temporales en Memoria)**:
   - `vfp_actualizar_sucursales.prg`: Sincronización de sucursales (4 caracteres, zona y fecha).
-  - `vfp_sincronizar_articulos_upsert.prg`: Sincronización masiva de 40.000+ artículos con update/insert sin conflictos.
+  - `vfp_sincronizar_articulos_upsert.prg`: Sincronización masiva de 40.000+ artículos con update/insert sin conflictos y resolución de claves.
   - `sync_lineas.prg`: Maestro de líneas (6 chars).
   - `sync_laboratorios.prg`: Maestro de laboratorios (6 chars).
   - `sync_proveedores.prg`: Maestro de proveedores/droguerías (10 chars).
   - `sync_clientes.prg`: Maestro de clientes (10 chars).
-  - `sync_inventario_sucursal.prg`: Stock y costo unitario por farmacia (soporta 40.000 arts x 35 sucursales).
+  - `sync_inventario_sucursal.prg`: Stock, costo unitario y precio unitario por farmacia.
   - `sync_ventas_diarias.prg`: Ventas globales diarias y tickets por farmacia.
   - `sync_ventas_producto.prg`: Detalle diario de artículos vendidos por farmacia.
   - `sync_compras_producto.prg`: Compras diarias por artículo y droguería.
@@ -36,7 +36,7 @@ Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Strea
 - `maestro_laboratorios`: `id_laboratorio`, `codigo_laboratorio VARCHAR(6) UNIQUE`, `nombre_laboratorio`, `fecha_registro`.
 - `maestro_proveedores`: `id_proveedor`, `codigo_proveedor VARCHAR(10) UNIQUE`, `nombre_proveedor`, `rif_proveedor`, `fecha_registro`.
 - `maestro_clientes`: `id_cliente`, `codigo_cliente VARCHAR(10) UNIQUE`, `nombre_cliente`, `tipo_cliente` (*Particular, Seguro / Empresa, Convenio*), `identificacion`, `fecha_registro`.
-- `maestro_productos`: `id_producto`, `codigo_articulo VARCHAR(30) UNIQUE`, `codigo_barras VARCHAR(50)` (flexible, sin restricción de longitud mínima ni duplicidad forzada), `nombre_producto`, `id_linea`, `id_laboratorio`.
+- `maestro_productos`: `id_producto`, `codigo_articulo VARCHAR(30) UNIQUE`, `codigo_barras VARCHAR(50)` (flexible, sin restricción de longitud mínima ni duplicidad forzada), `nombre_producto`, `id_linea`, `id_laboratorio`, `fecha_registro`.
 
 ### 2. Tablas Transaccionales de Rendimiento (KPIs)
 - `kpi_ventas_diarias`: Facturación bruta, **número de operaciones / tickets por farmacia** (`numero_operaciones`) y ticket promedio generado.
@@ -68,7 +68,11 @@ Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Strea
 2. **Pestañas Implementadas**:
    - 📊 **Ventas & Rendimiento**: Facturación total, tickets/operaciones, ticket promedio, unidades vendidas, evolución diaria, **Top 20 Productos Más Vendidos con selector de orden (Facturado $ vs Unidades)**, participación por laboratorios (con hover de unidades y montos) y tabla interactiva completa.
    - 📥 **Compras & Proveedores**: Inversión en compras, unidades adquiridas, **Top 5 Droguerías (orden por Inversión o Unidades)**, **Compras por Laboratorio (orden por Inversión o Unidades)** y tabla detallada.
-   - 📦 **Inventario & Valorización**: Inventario valorizado total a costo y PVP, margen potencial, valorización por laboratorio/línea, tabla valorizada y **módulo comparador de precios y stock entre sucursales con buscador predictivo** (búsqueda por nombre, código de artículo o código de barras sobre 40.000 referencias).
+   - 📦 **Inventario & Valorización**: 
+     - Inventario valorizado a costo y a PVP con margen bruto potencial.
+     - Valorización por laboratorio y por línea de producto.
+     - Tabla valorizada por artículo con alertas de quiebre de stock.
+     - **Módulo comparador de precios y stock entre sucursales con buscador predictivo**: permite buscar por nombre, código de artículo, código de barras o laboratorio sobre las 40.000 referencias mostrando precio mínimo, máximo, promedio, margen y stock disponible por tienda.
    - 👨‍💼 **Equipo de Ventas**: Ranking y productividad por asesor.
    - 💰 **Tesorería & Finanzas**: Arqueo de efectivo (bóvedas y cajas en USD/VES), cuentas bancarias, CxC por cliente y CxP por proveedor.
 
@@ -80,4 +84,4 @@ Cuadro de Mando Integral y Dashboard analítico desarrollado en **Python / Strea
    cd C:\Users\Windows\.gemini\antigravity\scratch\dashboard-mysql
    python -m streamlit run app.py
    ```
-2. **Para continuar en el chat**: Con solo decir *"Continuemos con el dashboard"* o *"Lee PROYECTO_RESUMEN.md"*, retomaremos exactamente donde lo dejamos hoy.
+2. **Para continuar en el chat**: Solo abre este chat o menciona *"Continuemos con el dashboard"* y retomaremos de inmediato.

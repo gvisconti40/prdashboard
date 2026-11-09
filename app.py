@@ -4,11 +4,21 @@ import plotly.express as px
 from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import random
+import os
+
+# --- Configuración de Marca y Empresa ---
+NOMBRE_EMPRESA = "GRUPO SAN ANSELMO"
+SLOGAN_EMPRESA = "Red de Farmacias - Cuadro de Mando Integral y Control Operativo"
+ICONO_PAGINA   = "💊"
+
+# Rutas de logotipos (puedes colocar tu archivo logo.png en la carpeta assets/)
+RUTA_ASSETS   = os.path.join(os.path.dirname(__file__), "assets")
+RUTA_LOGO     = os.path.join(RUTA_ASSETS, "logo.png")
 
 # --- Configuración visual de la aplicación ---
 st.set_page_config(
-    page_title="KPI Dashboard - Grupo Farmacias",
-    page_icon="💊",
+    page_title=f"KPIs - {NOMBRE_EMPRESA}",
+    page_icon=ICONO_PAGINA,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -292,9 +302,19 @@ def generar_datos_prueba():
         "cxp": df_cxp
     }
 
-# --- Título principal ---
-st.title("💊 Cuadro de Mando Integral - Red de Farmacias")
-st.caption("Consolidado Centralizado de Rendimiento Operativo, Comercial y Financiero")
+# --- Encabezado Principal y Marca ---
+if os.path.exists(RUTA_LOGO):
+    # Si existe el logo en assets/logo.png, muestra logo + título alineados
+    col_logo, col_titulo = st.columns([1, 6])
+    with col_logo:
+        st.image(RUTA_LOGO, use_container_width=True)
+    with col_titulo:
+        st.title(NOMBRE_EMPRESA)
+        st.caption(SLOGAN_EMPRESA)
+else:
+    # Si aún no has pegado el logo, muestra el título con su icono institucional
+    st.title(f"{ICONO_PAGINA} {NOMBRE_EMPRESA}")
+    st.caption(SLOGAN_EMPRESA)
 
 # --- Barra lateral de Configuración y Filtros ---
 st.sidebar.header("⚙️ Configuración & Filtros")

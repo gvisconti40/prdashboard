@@ -1,0 +1,8 @@
+# Carpeta de Recursos Visuales (Logos e Imágenes)
+
+Coloca aquí el archivo de logotipo de tu empresa con el nombre:
+👉 `logo.png` (o `logo.jpg`)
+
+La aplicación [app.py](../app.py) lo detectará automáticamente y lo mostrará:
+1. En la parte superior del encabezado junto al nombre de la empresa.
+2. En la parte superior de la barra lateral de filtros.
