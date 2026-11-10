@@ -126,7 +126,8 @@ def generar_datos_prueba():
     df_prod = df_prod.merge(df_lineas[["id_linea", "codigo_linea", "descripcion_linea"]], on="id_linea")
     df_prod = df_prod.merge(df_labs[["id_laboratorio", "codigo_laboratorio", "nombre_laboratorio"]], on="id_laboratorio")
 
-    fechas = [hoy - timedelta(days=i) for i in range(30, -1, -1)]
+    # Generar histórico de 6 meses (aprox 180 días) para análisis mensual
+    fechas = [hoy - timedelta(days=i) for i in range(180, -1, -1)]
 
     # 7. Ventas Diarias Globales por Farmacia (Contado vs Crédito y Operaciones)
     filas_vta = []
@@ -403,15 +404,15 @@ ids_sucursales_zona = df_sucursales_filtradas["id_sucursal"].tolist()
 
 # 3. Selector de Fechas
 hoy = datetime.now().date()
-hace_30_dias = hoy - timedelta(days=30)
-rango_fecha = st.sidebar.date_input("Rango de Fechas:", value=(hace_30_dias, hoy), max_value=hoy)
+hace_6_meses = hoy - timedelta(days=180)
+rango_fecha = st.sidebar.date_input("Rango de Fechas:", value=(hace_6_meses, hoy), max_value=hoy)
 
 if isinstance(rango_fecha, (tuple, list)) and len(rango_fecha) == 2:
     f_ini, f_fin = rango_fecha
 elif isinstance(rango_fecha, (tuple, list)) and len(rango_fecha) == 1:
     f_ini = f_fin = rango_fecha[0]
 else:
-    f_ini, f_fin = hace_30_dias, hoy
+    f_ini, f_fin = hace_6_meses, hoy
 
 st.sidebar.divider()
 st.sidebar.subheader("🎯 Filtros Maestros")
@@ -596,8 +597,8 @@ with tab_ventas:
 
     st.divider()
 
-    # Evolución Diaria de Ventas (Desglosando Contado y Crédito)
-    st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito")
+    # Evolución Diaria de Ventas (Desglosando Contado y Crédito - Últimos 30 Días)
+    st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito (Últimos 30 Días)")
     if not df_v_dia.empty:
         # Asegurar columnas si vienen de MySQL antiguo
         if "operaciones_contado" not in df_v_dia:
@@ -605,7 +606,12 @@ with tab_ventas:
         if "operaciones_credito" not in df_v_dia:
             df_v_dia["operaciones_credito"] = 0
 
-        df_dia_agg = df_v_dia.groupby("fecha").agg(
+        # Filtrar únicamente los últimos 30 días con respecto a la fecha final seleccionada
+        fecha_maxima = pd.to_datetime(df_v_dia["fecha"]).max()
+        fecha_corte_30d = fecha_maxima - pd.Timedelta(days=29)
+        df_v_dia_30d = df_v_dia[pd.to_datetime(df_v_dia["fecha"]) >= fecha_corte_30d]
+
+        df_dia_agg = df_v_dia_30d.groupby("fecha").agg(
             ventas_contado=("ventas_contado", "sum"),
             ventas_credito=("ventas_credito", "sum"),
             total_facturado=("total_facturado", "sum"),
@@ -657,7 +663,7 @@ with tab_ventas:
         ))
 
         fig_evol.update_layout(
-            title="Facturación Diaria por Modalidad de Cobro",
+            title="Facturación Diaria por Modalidad de Cobro (Últimos 30 Días)",
             barmode="stack",
             hovermode="x unified",
             xaxis_title="Fecha",
@@ -665,6 +671,98 @@ with tab_ventas:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig_evol, use_container_width=True)
+
+        # --- Nueva Sección: Evolución Mes a Mes de Ventas, Ticket Promedio y Operaciones ---
+        st.markdown("#### 📅 Evolución Mes a Mes: Facturación, Ticket Promedio y Operaciones")
+        df_v_mes = df_v_dia.copy()
+        df_v_mes["periodo_mes"] = pd.to_datetime(df_v_mes["fecha"]).dt.to_period("M").astype(str)
+
+        df_mes_agg = df_v_mes.groupby("periodo_mes").agg(
+            total_facturado=("total_facturado", "sum"),
+            ventas_contado=("ventas_contado", "sum"),
+            ventas_credito=("ventas_credito", "sum"),
+            numero_operaciones=("numero_operaciones", "sum"),
+            operaciones_contado=("operaciones_contado", "sum"),
+            operaciones_credito=("operaciones_credito", "sum")
+        ).reset_index().sort_values("periodo_mes")
+
+        if not df_mes_agg.empty:
+            df_mes_agg["ticket_promedio"] = df_mes_agg["total_facturado"] / df_mes_agg["numero_operaciones"].replace(0, 1)
+
+            col_m_graf, col_m_metr = st.columns([3, 1])
+
+            with col_m_graf:
+                from plotly.subplots import make_subplots
+                fig_mes = make_subplots(
+                    rows=1, cols=1,
+                    specs=[[{"secondary_y": True}]]
+                )
+
+                # Barras de Facturación
+                fig_mes.add_trace(
+                    go.Bar(
+                        x=df_mes_agg["periodo_mes"],
+                        y=df_mes_agg["total_facturado"],
+                        name="Facturación Total ($)",
+                        marker_color="#2b5876",
+                        hovertemplate="<b>Mes:</b> %{x}<br><b>Venta Total:</b> $%{y:,.2f}<extra></extra>"
+                    ),
+                    secondary_y=False
+                )
+
+                # Línea de Ticket Promedio
+                fig_mes.add_trace(
+                    go.Scatter(
+                        x=df_mes_agg["periodo_mes"],
+                        y=df_mes_agg["ticket_promedio"],
+                        name="Ticket Promedio ($)",
+                        mode="lines+markers+text",
+                        text=[f"${v:.2f}" for v in df_mes_agg["ticket_promedio"]],
+                        textposition="top center",
+                        line=dict(color="#e67e22", width=3),
+                        marker=dict(size=8),
+                        hovertemplate="<b>Ticket Promedio:</b> $%{y:,.2f}<extra></extra>"
+                    ),
+                    secondary_y=True
+                )
+
+                # Línea de Operaciones
+                fig_mes.add_trace(
+                    go.Scatter(
+                        x=df_mes_agg["periodo_mes"],
+                        y=df_mes_agg["numero_operaciones"],
+                        name="Nº Operaciones",
+                        mode="lines+markers",
+                        line=dict(color="#9b59b6", width=2, dash="dot"),
+                        marker=dict(size=7, symbol="square"),
+                        hovertemplate="<b>Operaciones:</b> %{y:,}<extra></extra>"
+                    ),
+                    secondary_y=False
+                )
+
+                fig_mes.update_layout(
+                    title="Tendencia Mensual: Facturación vs Ticket Promedio y Operaciones",
+                    hovermode="x unified",
+                    xaxis_title="Mes (Año-Mes)",
+                    legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
+                    yaxis=dict(title="Monto Facturado ($) / Operaciones"),
+                    yaxis2=dict(title="Ticket Promedio ($)", overlaying="y", side="right", showgrid=False)
+                )
+                st.plotly_chart(fig_mes, use_container_width=True)
+
+            with col_m_metr:
+                st.markdown("##### 📌 Desglose Mensual")
+                st.dataframe(
+                    df_mes_agg[["periodo_mes", "total_facturado", "ticket_promedio", "numero_operaciones"]],
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "periodo_mes": "Mes",
+                        "total_facturado": st.column_config.NumberColumn("Ventas ($)", format="$%.2f"),
+                        "ticket_promedio": st.column_config.NumberColumn("Ticket Prom.", format="$%.2f"),
+                        "numero_operaciones": st.column_config.NumberColumn("Tickets", format="%d")
+                    }
+                )
     else:
         st.warning("No hay registros de ventas para esta selección.")
 
@@ -803,17 +901,22 @@ with tab_compras:
 
     col_c_izq, col_c_der = st.columns(2)
     with col_c_izq:
-        st.markdown("#### 📅 Inversión en Compras por Fecha")
+        st.markdown("#### 📅 Inversión en Compras por Fecha (Últimos 30 Días)")
         if not df_comp.empty:
-            df_c_fecha = df_comp.groupby("fecha").agg(
+            fecha_max_comp = pd.to_datetime(df_comp["fecha"]).max()
+            fecha_corte_comp_30d = fecha_max_comp - pd.Timedelta(days=29)
+            df_comp_30d = df_comp[pd.to_datetime(df_comp["fecha"]) >= fecha_corte_comp_30d]
+
+            df_c_fecha = df_comp_30d.groupby("fecha").agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
-            ).reset_index()
+            ).reset_index().sort_values("fecha")
             fig_cf = px.bar(
                 df_c_fecha,
                 x="fecha",
                 y="total_compra_monto",
                 labels={"total_compra_monto": "Inversión ($)", "fecha": "Fecha"},
+                title="Compras Diarias (Últimos 30 Días)",
                 color_discrete_sequence=["#e67e22"],
                 custom_data=["unidades_compradas"]
             )
@@ -822,6 +925,7 @@ with tab_compras:
                               "<b>Inversión:</b> $%{y:,.2f}<br>" +
                               "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
             )
+            fig_cf.update_layout(hovermode="x unified")
             st.plotly_chart(fig_cf, use_container_width=True)
         else:
             st.info("Sin compras registradas para estos filtros.")
@@ -947,6 +1051,70 @@ with tab_compras:
             st.plotly_chart(fig_clab_pie, use_container_width=True)
         else:
             st.info("Sin datos para distribución de laboratorios.")
+
+    # --- Nueva Sección: Evolución Mes a Mes de Compras por Laboratorio y por Proveedor ---
+    st.markdown("#### 📅 Evolución Mes a Mes de Compras: Por Laboratorio y por Proveedor")
+    if not df_comp.empty:
+        df_comp_mes = df_comp.copy()
+        df_comp_mes["periodo_mes"] = pd.to_datetime(df_comp_mes["fecha"]).dt.to_period("M").astype(str)
+
+        col_cmes_lab, col_cmes_prv = st.columns(2)
+
+        with col_cmes_lab:
+            st.markdown("##### 🧪 Compras Mensuales por Laboratorio ($)")
+            df_mes_lab = df_comp_mes.groupby(["periodo_mes", "nombre_laboratorio"]).agg(
+                total_compra_monto=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index().sort_values("periodo_mes")
+
+            fig_mes_lab = px.bar(
+                df_mes_lab,
+                x="periodo_mes",
+                y="total_compra_monto",
+                color="nombre_laboratorio",
+                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "nombre_laboratorio": "Laboratorio"},
+                title="Evolución Mensual de Compras por Laboratorio",
+                barmode="stack",
+                custom_data=["nombre_laboratorio", "unidades_compradas"]
+            )
+            fig_mes_lab.update_traces(
+                hovertemplate="<b>Mes:</b> %{x}<br><b>Laboratorio:</b> %{customdata[0]}<br><b>Inversión:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata[1]:,}<extra></extra>"
+            )
+            fig_mes_lab.update_layout(
+                hovermode="x unified",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_mes_lab, use_container_width=True)
+
+        with col_cmes_prv:
+            st.markdown("##### 🚚 Compras Mensuales por Proveedor / Droguería ($)")
+            df_mes_prv = df_comp_mes.groupby(["periodo_mes", "nombre_proveedor"]).agg(
+                total_compra_monto=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index().sort_values("periodo_mes")
+
+            fig_mes_prv = px.bar(
+                df_mes_prv,
+                x="periodo_mes",
+                y="total_compra_monto",
+                color="nombre_proveedor",
+                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "nombre_proveedor": "Droguería"},
+                title="Evolución Mensual de Compras por Droguería",
+                barmode="stack",
+                custom_data=["nombre_proveedor", "unidades_compradas"]
+            )
+            fig_mes_prv.update_traces(
+                hovertemplate="<b>Mes:</b> %{x}<br><b>Droguería:</b> %{customdata[0]}<br><b>Inversión:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata[1]:,}<extra></extra>"
+            )
+            fig_mes_prv.update_layout(
+                hovermode="x unified",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_mes_prv, use_container_width=True)
+    else:
+        st.info("Sin registros de compras para la evolución mensual.")
+
+    st.divider()
 
     st.markdown("#### 📋 Detalle de Artículos Comprados")
     if not df_comp.empty:
