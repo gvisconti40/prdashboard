@@ -561,6 +561,171 @@ if modo_datos == "Simulación (Datos de Prueba)":
     if filtro_prov_activo:
         df_cxp = df_cxp[df_cxp["id_proveedor"] == id_prov_sel]
 
+else:
+    # MODO CONEXIÓN MYSQL EN VIVO
+    engine = get_db_engine()
+    with engine.connect() as conn:
+        # Construcción de cláusula de sucursales
+        if id_sucursal:
+            cond_suc = f"= {id_sucursal}"
+        else:
+            suc_str = ",".join(map(str, ids_sucursales_zona)) if ids_sucursales_zona else "0"
+            cond_suc = f"IN ({suc_str})"
+
+        f_ini_str = str(f_ini)
+        f_fin_str = str(f_fin)
+
+        # 1. Ventas por Producto
+        q_v_prod = f"""
+            SELECT vp.id_sucursal, vp.fecha, vp.id_producto, vp.unidades_vendidas, vp.total_venta_monto,
+                   p.codigo_articulo, p.codigo_barras, p.nombre_producto,
+                   l.id_linea, l.codigo_linea, l.descripcion_linea,
+                   lb.id_laboratorio, lb.codigo_laboratorio, lb.nombre_laboratorio
+            FROM kpi_ventas_por_producto vp
+            JOIN maestro_productos p ON vp.id_producto = p.id_producto
+            JOIN maestro_lineas l ON p.id_linea = l.id_linea
+            JOIN maestro_laboratorios lb ON p.id_laboratorio = lb.id_laboratorio
+            WHERE vp.id_sucursal {cond_suc}
+              AND vp.fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+        """
+        if filtro_linea_activo:
+            q_v_prod += f" AND p.id_linea = {id_linea_sel}"
+        if filtro_lab_activo:
+            q_v_prod += f" AND p.id_laboratorio = {id_lab_sel}"
+
+        df_v_prod = pd.read_sql(text(q_v_prod), conn)
+
+        # 2. Ventas Diarias Globales
+        if filtro_linea_activo or filtro_lab_activo:
+            if not df_v_prod.empty:
+                df_v_dia = df_v_prod.groupby(["fecha"]).agg(
+                    total_facturado=("total_venta_monto", "sum"),
+                    numero_operaciones=("unidades_vendidas", "count")
+                ).reset_index()
+                df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.75
+                df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.25
+                df_v_dia["operaciones_contado"] = (df_v_dia["numero_operaciones"] * 0.8).astype(int)
+                df_v_dia["operaciones_credito"] = df_v_dia["numero_operaciones"] - df_v_dia["operaciones_contado"]
+            else:
+                df_v_dia = pd.DataFrame(columns=["fecha", "total_facturado", "numero_operaciones", "ventas_contado", "ventas_credito", "operaciones_contado", "operaciones_credito"])
+        else:
+            q_v_dia = f"""
+                SELECT id_sucursal, fecha, total_facturado,
+                       COALESCE(ventas_contado, 0.00) AS ventas_contado,
+                       COALESCE(ventas_credito, 0.00) AS ventas_credito,
+                       numero_operaciones,
+                       COALESCE(operaciones_contado, 0) AS operaciones_contado,
+                       COALESCE(operaciones_credito, 0) AS operaciones_credito
+                FROM kpi_ventas_diarias
+                WHERE id_sucursal {cond_suc}
+                  AND fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+                ORDER BY fecha
+            """
+            df_v_dia = pd.read_sql(text(q_v_dia), conn)
+
+        # 3. Compras por Producto y Proveedor
+        q_comp = f"""
+            SELECT cp.id_sucursal, cp.fecha, cp.id_producto, cp.id_proveedor, cp.unidades_compradas, cp.total_compra_monto,
+                   p.codigo_articulo, p.codigo_barras, p.nombre_producto,
+                   l.id_linea, l.codigo_linea, l.descripcion_linea,
+                   lb.id_laboratorio, lb.codigo_laboratorio, lb.nombre_laboratorio,
+                   pr.codigo_proveedor, pr.nombre_proveedor
+            FROM kpi_compras_por_producto cp
+            JOIN maestro_productos p ON cp.id_producto = p.id_producto
+            JOIN maestro_lineas l ON p.id_linea = l.id_linea
+            JOIN maestro_laboratorios lb ON p.id_laboratorio = lb.id_laboratorio
+            JOIN maestro_proveedores pr ON cp.id_proveedor = pr.id_proveedor
+            WHERE cp.id_sucursal {cond_suc}
+              AND cp.fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+        """
+        if filtro_linea_activo:
+            q_comp += f" AND p.id_linea = {id_linea_sel}"
+        if filtro_lab_activo:
+            q_comp += f" AND p.id_laboratorio = {id_lab_sel}"
+        if filtro_prov_activo:
+            q_comp += f" AND cp.id_proveedor = {id_prov_sel}"
+
+        df_comp = pd.read_sql(text(q_comp), conn)
+
+        # 4. Inventario
+        q_inv = f"""
+            SELECT inv.id_inventario, inv.id_sucursal, inv.id_producto, inv.stock_actual, inv.stock_minimo,
+                   inv.costo_unitario, inv.precio_unitario, inv.valor_total_inventario, inv.valor_venta_inventario,
+                   s.codigo_sucursal, s.nombre AS nombre_sucursal, s.ciudad, s.zona,
+                   p.codigo_articulo, p.codigo_barras, p.nombre_producto,
+                   l.id_linea, l.codigo_linea, l.descripcion_linea,
+                   lb.id_laboratorio, lb.codigo_laboratorio, lb.nombre_laboratorio
+            FROM kpi_inventario_sucursal inv
+            JOIN sucursales s ON inv.id_sucursal = s.id_sucursal
+            JOIN maestro_productos p ON inv.id_producto = p.id_producto
+            JOIN maestro_lineas l ON p.id_linea = l.id_linea
+            JOIN maestro_laboratorios lb ON p.id_laboratorio = lb.id_laboratorio
+            WHERE inv.id_sucursal {cond_suc}
+        """
+        if filtro_linea_activo:
+            q_inv += f" AND p.id_linea = {id_linea_sel}"
+        if filtro_lab_activo:
+            q_inv += f" AND p.id_laboratorio = {id_lab_sel}"
+
+        df_inv = pd.read_sql(text(q_inv), conn)
+
+        # 5. Vendedores
+        q_vend = f"""
+            SELECT id_sucursal, fecha, nombre_vendedor, total_vendido, cantidad_operaciones
+            FROM kpi_ventas_vendedor
+            WHERE id_sucursal {cond_suc}
+              AND fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+        """
+        df_vend = pd.read_sql(text(q_vend), conn)
+
+        # 6. Formas de Pago
+        q_pagos = f"""
+            SELECT id_sucursal, fecha, forma_pago, total_ingresado
+            FROM kpi_formas_pago
+            WHERE id_sucursal {cond_suc}
+              AND fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+        """
+        df_pagos = pd.read_sql(text(q_pagos), conn)
+
+        # 7. Bancos y Cajas
+        q_bancos = f"""
+            SELECT id_sucursal, fecha, nombre_banco, numero_cuenta_oculto, saldo_disponible
+            FROM kpi_saldos_bancos
+            WHERE id_sucursal {cond_suc}
+        """
+        df_bancos = pd.read_sql(text(q_bancos), conn)
+
+        q_cajas = f"""
+            SELECT id_sucursal, fecha, tipo_caja, moneda, saldo_efectivo
+            FROM kpi_cajas_efectivo
+            WHERE id_sucursal {cond_suc}
+        """
+        df_cajas = pd.read_sql(text(q_cajas), conn)
+
+        # 8. CxC y CxP
+        q_cxc = f"""
+            SELECT cxc.id_sucursal, cxc.fecha, cxc.id_cliente, cxc.saldo_pendiente,
+                   cxc.monto_otorgado_hoy, cxc.monto_recuperado_hoy,
+                   cl.codigo_cliente, cl.nombre_cliente, cl.tipo_cliente, cl.identificacion
+            FROM kpi_cxc_diario cxc
+            JOIN maestro_clientes cl ON cxc.id_cliente = cl.id_cliente
+            WHERE cxc.id_sucursal {cond_suc}
+        """
+        if filtro_cliente_activo:
+            q_cxc += f" AND cxc.id_cliente = {id_cliente_sel}"
+        df_cxc = pd.read_sql(text(q_cxc), conn)
+
+        q_cxp = f"""
+            SELECT cxp.id_sucursal, cxp.fecha, cxp.id_proveedor, cxp.saldo_por_pagar,
+                   pr.codigo_proveedor, pr.nombre_proveedor, pr.rif_proveedor
+            FROM kpi_cxp_diario cxp
+            JOIN maestro_proveedores pr ON cxp.id_proveedor = pr.id_proveedor
+            WHERE cxp.id_sucursal {cond_suc}
+        """
+        if filtro_prov_activo:
+            q_cxp += f" AND cxp.id_proveedor = {id_prov_sel}"
+        df_cxp = pd.read_sql(text(q_cxp), conn)
+
 # =========================================================================
 # TAB 1: VENTAS & RENDIMIENTO
 # =========================================================================
