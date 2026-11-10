@@ -651,7 +651,7 @@ else:
         q_inv = f"""
             SELECT inv.id_inventario, inv.id_sucursal, inv.id_producto, inv.stock_actual, inv.stock_minimo,
                    inv.costo_unitario, inv.precio_unitario, inv.valor_total_inventario, inv.valor_venta_inventario,
-                   s.codigo_sucursal, s.nombre AS nombre_sucursal, s.ciudad, s.zona,
+                   s.codigo_sucursal, s.nombre, s.ciudad, s.zona,
                    p.codigo_articulo, p.codigo_barras, p.nombre_producto,
                    l.id_linea, l.codigo_linea, l.descripcion_linea,
                    lb.id_laboratorio, lb.codigo_laboratorio, lb.nombre_laboratorio
