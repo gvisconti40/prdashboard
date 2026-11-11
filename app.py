@@ -1460,7 +1460,6 @@ with tab_compras:
                 y="total_compra_monto",
                 color="lab_display",
                 labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "lab_display": "Laboratorio"},
-                title="Evolución Mensual de Compras por Laboratorio (Top 20 + Otros)",
                 barmode="stack",
                 custom_data=["lab_display", "unidades_compradas"]
             )
@@ -1469,7 +1468,15 @@ with tab_compras:
             )
             fig_mes_lab.update_layout(
                 hovermode="x unified",
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.22,
+                    xanchor="center",
+                    x=0.5,
+                    title_text=""
+                ),
+                margin=dict(t=20, b=80)
             )
             st.plotly_chart(fig_mes_lab, use_container_width=True)
 
@@ -1493,7 +1500,6 @@ with tab_compras:
                 y="total_compra_monto",
                 color="prv_display",
                 labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "prv_display": "Droguería"},
-                title="Evolución Mensual de Compras por Droguería (Top 20 + Otros)",
                 barmode="stack",
                 custom_data=["prv_display", "unidades_compradas"]
             )
@@ -1502,7 +1508,15 @@ with tab_compras:
             )
             fig_mes_prv.update_layout(
                 hovermode="x unified",
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.22,
+                    xanchor="center",
+                    x=0.5,
+                    title_text=""
+                ),
+                margin=dict(t=20, b=80)
             )
             st.plotly_chart(fig_mes_prv, use_container_width=True)
     else:
