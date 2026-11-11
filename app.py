@@ -193,14 +193,43 @@ def generar_datos_prueba():
             })
     df_inv = pd.DataFrame(filas_inv)
 
+    # 9.1. Histórico Mensual de Inventario (Últimos 6 meses)
+    meses_hist = [
+        (hoy - timedelta(days=30*i)).strftime("%Y-%m")
+        for i in range(5, -1, -1)
+    ]
+    filas_inv_mes = []
+    for suc in sucursales:
+        base_cst = random.uniform(85000.0, 160000.0)
+        for idx_m, m in enumerate(meses_hist):
+            # Tendencia de evolución
+            cst_mes = round(base_cst * (1 + (idx_m * 0.035) + random.uniform(-0.02, 0.02)), 2)
+            pvp_mes = round(cst_mes * random.uniform(1.60, 1.72), 2)
+            uds_mes = int(round(cst_mes / random.uniform(4.5, 5.5)))
+            filas_inv_mes.append({
+                "id_sucursal": suc["id_sucursal"],
+                "periodo_mes": m,
+                "fecha_cierre": f"{m}-28",
+                "total_unidades": uds_mes,
+                "valor_total_costo": cst_mes,
+                "valor_total_pvp": pvp_mes,
+                "margen_potencial_pct": round((pvp_mes - cst_mes) / pvp_mes * 100, 2)
+            })
+    df_inv_mes = pd.DataFrame(filas_inv_mes)
+
     # 10. Compras (enlace a id_proveedor)
     filas_comp = []
+    filas_comp_dia = []
     for suc in sucursales:
         for f in fechas[::2]:
+            uds_tot_dia = 0
+            mto_tot_dia = 0.0
             for _, p in df_prod.sample(6).iterrows():
                 prv = random.choice(proveedores)
                 uds_c = random.randint(20, 90)
                 costo = round(uds_c * random.uniform(2.5, 12.0), 2)
+                uds_tot_dia += uds_c
+                mto_tot_dia += costo
                 filas_comp.append({
                     "id_sucursal": suc["id_sucursal"],
                     "fecha": f,
@@ -209,7 +238,20 @@ def generar_datos_prueba():
                     "unidades_compradas": uds_c,
                     "total_compra_monto": costo
                 })
+            facs = random.randint(2, 6)
+            c_cred = round(mto_tot_dia * random.uniform(0.60, 0.85), 2)
+            c_cont = round(mto_tot_dia - c_cred, 2)
+            filas_comp_dia.append({
+                "id_sucursal": suc["id_sucursal"],
+                "fecha": f,
+                "total_comprado": mto_tot_dia,
+                "unidades_compradas": uds_tot_dia,
+                "numero_facturas_compra": facs,
+                "compras_contado": c_cont,
+                "compras_credito": c_cred
+            })
     df_compras = pd.DataFrame(filas_comp)
+    df_compras_dia = pd.DataFrame(filas_comp_dia)
 
     # 11. Vendedores
     vendedores = ["María Gómez", "Carlos Pérez", "Ana Rodríguez", "José Morales", "Laura Silva"]
@@ -307,7 +349,9 @@ def generar_datos_prueba():
         "ventas_diarias": df_vta_dia,
         "ventas_producto": df_vta_prod,
         "inventario": df_inv,
+        "inventario_mensual": df_inv_mes,
         "compras": df_compras,
+        "compras_diarias": df_compras_dia,
         "vendedores": df_vend,
         "formas_pago": df_formas_pago,
         "bancos": df_bancos,
@@ -506,6 +550,26 @@ if modo_datos == "Simulación (Datos de Prueba)":
     if filtro_prov_activo:
         df_comp = df_comp[df_comp["id_proveedor"] == id_prov_sel]
 
+    # Compras Diarias Globales
+    if filtro_linea_activo or filtro_lab_activo or filtro_prov_activo:
+        if not df_comp.empty:
+            df_c_dia = df_comp.groupby(["fecha"]).agg(
+                total_comprado=("total_compra_monto", "sum"),
+                unidades_compradas=("unidades_compradas", "sum")
+            ).reset_index()
+            df_c_dia["numero_facturas_compra"] = df_c_dia["unidades_compradas"].apply(lambda x: max(1, x // 40))
+            df_c_dia["compras_contado"] = df_c_dia["total_comprado"] * 0.25
+            df_c_dia["compras_credito"] = df_c_dia["total_comprado"] * 0.75
+        else:
+            df_c_dia = pd.DataFrame(columns=["fecha", "total_comprado", "unidades_compradas", "numero_facturas_compra", "compras_contado", "compras_credito"])
+    else:
+        df_c_dia = datos["compras_diarias"]
+        df_c_dia = df_c_dia[(df_c_dia["fecha"] >= f_ini) & (df_c_dia["fecha"] <= f_fin)]
+        if id_sucursal:
+            df_c_dia = df_c_dia[df_c_dia["id_sucursal"] == id_sucursal]
+        else:
+            df_c_dia = df_c_dia[df_c_dia["id_sucursal"].isin(ids_sucursales_zona)]
+
     # 4. Inventario
     df_inv = datos["inventario"].merge(datos["productos"], on="id_producto").merge(datos["sucursales"], on="id_sucursal")
     if id_sucursal:
@@ -516,6 +580,13 @@ if modo_datos == "Simulación (Datos de Prueba)":
         df_inv = df_inv[df_inv["id_linea"] == id_linea_sel]
     if filtro_lab_activo:
         df_inv = df_inv[df_inv["id_laboratorio"] == id_lab_sel]
+
+    # Histórico de Inventario Mensual
+    df_inv_mes = datos["inventario_mensual"].merge(datos["sucursales"], on="id_sucursal")
+    if id_sucursal:
+        df_inv_mes = df_inv_mes[df_inv_mes["id_sucursal"] == id_sucursal]
+    else:
+        df_inv_mes = df_inv_mes[df_inv_mes["id_sucursal"].isin(ids_sucursales_zona)]
 
     # 5. Vendedores
     df_vend = datos["vendedores"][(datos["vendedores"]["fecha"] >= f_ini) & (datos["vendedores"]["fecha"] <= f_fin)]
@@ -647,6 +718,44 @@ else:
 
         df_comp = pd.read_sql(text(q_comp), conn)
 
+        # Compras Diarias Globales
+        if filtro_linea_activo or filtro_lab_activo or filtro_prov_activo:
+            if not df_comp.empty:
+                df_c_dia = df_comp.groupby(["fecha"]).agg(
+                    total_comprado=("total_compra_monto", "sum"),
+                    unidades_compradas=("unidades_compradas", "sum")
+                ).reset_index()
+                df_c_dia["numero_facturas_compra"] = df_c_dia["unidades_compradas"].apply(lambda x: max(1, x // 40))
+                df_c_dia["compras_contado"] = df_c_dia["total_comprado"] * 0.25
+                df_c_dia["compras_credito"] = df_c_dia["total_comprado"] * 0.75
+            else:
+                df_c_dia = pd.DataFrame(columns=["fecha", "total_comprado", "unidades_compradas", "numero_facturas_compra", "compras_contado", "compras_credito"])
+        else:
+            try:
+                q_c_dia = f"""
+                    SELECT id_sucursal, fecha, total_comprado, unidades_compradas,
+                           COALESCE(numero_facturas_compra, 0) AS numero_facturas_compra,
+                           COALESCE(compras_contado, 0.00) AS compras_contado,
+                           COALESCE(compras_credito, 0.00) AS compras_credito
+                    FROM kpi_compras_diarias
+                    WHERE id_sucursal {cond_suc}
+                      AND fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
+                    ORDER BY fecha
+                """
+                df_c_dia = pd.read_sql(text(q_c_dia), conn)
+            except Exception:
+                # Si la tabla kpi_compras_diarias aún no fue creada en MySQL, agrupar desde df_comp
+                if not df_comp.empty:
+                    df_c_dia = df_comp.groupby(["fecha"]).agg(
+                        total_comprado=("total_compra_monto", "sum"),
+                        unidades_compradas=("unidades_compradas", "sum")
+                    ).reset_index()
+                    df_c_dia["numero_facturas_compra"] = df_c_dia["unidades_compradas"].apply(lambda x: max(1, x // 40))
+                    df_c_dia["compras_contado"] = df_c_dia["total_comprado"] * 0.25
+                    df_c_dia["compras_credito"] = df_c_dia["total_comprado"] * 0.75
+                else:
+                    df_c_dia = pd.DataFrame(columns=["fecha", "total_comprado", "unidades_compradas", "numero_facturas_compra", "compras_contado", "compras_credito"])
+
         # 4. Inventario
         q_inv = f"""
             SELECT inv.id_inventario, inv.id_sucursal, inv.id_producto, inv.stock_actual, inv.stock_minimo,
@@ -668,6 +777,22 @@ else:
             q_inv += f" AND p.id_laboratorio = {id_lab_sel}"
 
         df_inv = pd.read_sql(text(q_inv), conn)
+
+        # Histórico de Inventario Mensual
+        try:
+            q_inv_mes = f"""
+                SELECT im.id_sucursal, im.periodo_mes, im.fecha_cierre, im.total_unidades,
+                       im.valor_total_costo, im.valor_total_pvp, im.margen_potencial_pct,
+                       s.codigo_sucursal, s.nombre, s.ciudad, s.zona
+                FROM kpi_inventario_mensual im
+                JOIN sucursales s ON im.id_sucursal = s.id_sucursal
+                WHERE im.id_sucursal {cond_suc}
+                ORDER BY im.periodo_mes
+            """
+            df_inv_mes = pd.read_sql(text(q_inv_mes), conn)
+        except Exception:
+            # Fallback en caso de que la tabla aún no exista en el MySQL en vivo
+            df_inv_mes = pd.DataFrame(columns=["id_sucursal", "periodo_mes", "fecha_cierre", "total_unidades", "valor_total_costo", "valor_total_pvp", "margen_potencial_pct", "codigo_sucursal", "nombre", "ciudad", "zona"])
 
         # 5. Vendedores
         q_vend = f"""
@@ -776,13 +901,23 @@ with tab_ventas:
         fecha_corte_30d = fecha_maxima - pd.Timedelta(days=29)
         df_v_dia_30d = df_v_dia[pd.to_datetime(df_v_dia["fecha"]) >= fecha_corte_30d]
 
+        # Calcular unidades vendidas por día desde df_v_prod si no viene en df_v_dia
+        if "unidades_vendidas" not in df_v_dia_30d.columns:
+            if not df_v_prod.empty:
+                df_uds_dia = df_v_prod[pd.to_datetime(df_v_prod["fecha"]) >= fecha_corte_30d].groupby("fecha")["unidades_vendidas"].sum().reset_index()
+                df_v_dia_30d = df_v_dia_30d.merge(df_uds_dia, on="fecha", how="left")
+                df_v_dia_30d["unidades_vendidas"] = df_v_dia_30d["unidades_vendidas"].fillna(0)
+            else:
+                df_v_dia_30d["unidades_vendidas"] = 0
+
         df_dia_agg = df_v_dia_30d.groupby("fecha").agg(
             ventas_contado=("ventas_contado", "sum"),
             ventas_credito=("ventas_credito", "sum"),
             total_facturado=("total_facturado", "sum"),
             numero_operaciones=("numero_operaciones", "sum"),
             operaciones_contado=("operaciones_contado", "sum"),
-            operaciones_credito=("operaciones_credito", "sum")
+            operaciones_credito=("operaciones_credito", "sum"),
+            unidades_vendidas=("unidades_vendidas", "sum")
         ).reset_index().sort_values("fecha")
 
         custom_info = list(zip(
@@ -791,7 +926,8 @@ with tab_ventas:
             df_dia_agg["ventas_contado"],
             df_dia_agg["operaciones_contado"],
             df_dia_agg["ventas_credito"],
-            df_dia_agg["operaciones_credito"]
+            df_dia_agg["operaciones_credito"],
+            df_dia_agg["unidades_vendidas"]
         ))
 
         fig_evol = go.Figure()
@@ -824,7 +960,7 @@ with tab_ventas:
             mode="markers",
             marker=dict(size=0, opacity=0),
             customdata=custom_info,
-            hovertemplate="📊 <b>Total Facturado Día:</b> $%{y:,.2f} (%{customdata[1]:,} ops)<extra></extra>"
+            hovertemplate="📊 <b>Total Facturado Día:</b> $%{y:,.2f} (%{customdata[1]:,} ops)<br>📦 <b>Unidades Vendidas Día:</b> %{customdata[6]:,} uds<extra></extra>"
         ))
 
         fig_evol.update_layout(
@@ -842,6 +978,17 @@ with tab_ventas:
         df_v_mes = df_v_dia.copy()
         df_v_mes["periodo_mes"] = pd.to_datetime(df_v_mes["fecha"]).dt.to_period("M").astype(str)
 
+        # Vincular unidades vendidas por mes desde df_v_prod si no están en df_v_mes
+        if "unidades_vendidas" not in df_v_mes.columns:
+            if not df_v_prod.empty:
+                df_v_prod_copy = df_v_prod.copy()
+                df_v_prod_copy["periodo_mes"] = pd.to_datetime(df_v_prod_copy["fecha"]).dt.to_period("M").astype(str)
+                df_uds_mes = df_v_prod_copy.groupby("periodo_mes")["unidades_vendidas"].sum().reset_index()
+            else:
+                df_uds_mes = pd.DataFrame(columns=["periodo_mes", "unidades_vendidas"])
+        else:
+            df_uds_mes = df_v_mes.groupby("periodo_mes")["unidades_vendidas"].sum().reset_index()
+
         df_mes_agg = df_v_mes.groupby("periodo_mes").agg(
             total_facturado=("total_facturado", "sum"),
             ventas_contado=("ventas_contado", "sum"),
@@ -850,6 +997,12 @@ with tab_ventas:
             operaciones_contado=("operaciones_contado", "sum"),
             operaciones_credito=("operaciones_credito", "sum")
         ).reset_index().sort_values("periodo_mes")
+
+        if not df_uds_mes.empty:
+            df_mes_agg = df_mes_agg.merge(df_uds_mes, on="periodo_mes", how="left")
+            df_mes_agg["unidades_vendidas"] = df_mes_agg["unidades_vendidas"].fillna(0).astype(int)
+        else:
+            df_mes_agg["unidades_vendidas"] = 0
 
         if not df_mes_agg.empty:
             df_mes_agg["ticket_promedio"] = df_mes_agg["total_facturado"] / df_mes_agg["numero_operaciones"].replace(0, 1)
@@ -870,7 +1023,8 @@ with tab_ventas:
                         y=df_mes_agg["total_facturado"],
                         name="Facturación Total ($)",
                         marker_color="#2b5876",
-                        hovertemplate="<b>Mes:</b> %{x}<br><b>Venta Total:</b> $%{y:,.2f}<extra></extra>"
+                        customdata=df_mes_agg["unidades_vendidas"],
+                        hovertemplate="<b>Mes:</b> %{x}<br><b>Venta Total:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata:,} uds<extra></extra>"
                     ),
                     secondary_y=False
                 )
@@ -918,14 +1072,15 @@ with tab_ventas:
             with col_m_metr:
                 st.markdown("##### 📌 Desglose Mensual")
                 st.dataframe(
-                    df_mes_agg[["periodo_mes", "total_facturado", "ticket_promedio", "numero_operaciones"]],
+                    df_mes_agg[["periodo_mes", "total_facturado", "ticket_promedio", "numero_operaciones", "unidades_vendidas"]],
                     use_container_width=True,
                     hide_index=True,
                     column_config={
                         "periodo_mes": "Mes",
                         "total_facturado": st.column_config.NumberColumn("Ventas ($)", format="$%.2f"),
                         "ticket_promedio": st.column_config.NumberColumn("Ticket Prom.", format="$%.2f"),
-                        "numero_operaciones": st.column_config.NumberColumn("Tickets", format="%d")
+                        "numero_operaciones": st.column_config.NumberColumn("Tickets", format="%d"),
+                        "unidades_vendidas": st.column_config.NumberColumn("Unidades", format="%d")
                     }
                 )
     else:
@@ -1053,44 +1208,87 @@ with tab_compras:
 
     st.subheader("Gestión de Compras y Abastecimiento de Mercancía")
 
-    tot_comp_monto = df_comp["total_compra_monto"].sum() if not df_comp.empty else 0
-    tot_comp_uds = df_comp["unidades_compradas"].sum() if not df_comp.empty else 0
+    tot_comp_monto = df_comp["total_compra_monto"].sum() if not df_comp.empty else (df_c_dia["total_comprado"].sum() if not df_c_dia.empty else 0)
+    tot_comp_uds = df_comp["unidades_compradas"].sum() if not df_comp.empty else (df_c_dia["unidades_compradas"].sum() if not df_c_dia.empty else 0)
     cant_proveedores_activos = df_comp["id_proveedor"].nunique() if not df_comp.empty else 0
+    tot_cmp_contado = df_c_dia["compras_contado"].sum() if "compras_contado" in df_c_dia and not df_c_dia.empty else 0
+    tot_cmp_credito = df_c_dia["compras_credito"].sum() if "compras_credito" in df_c_dia and not df_c_dia.empty else 0
+    tot_facturas_compra = df_c_dia["numero_facturas_compra"].sum() if "numero_facturas_compra" in df_c_dia and not df_c_dia.empty else 0
 
-    col_cmp1, col_cmp2, col_cmp3 = st.columns(3)
+    col_cmp1, col_cmp2, col_cmp3, col_cmp4, col_cmp5 = st.columns(5)
     col_cmp1.metric("Inversión Total en Compras", f"${tot_comp_monto:,.2f}")
-    col_cmp2.metric("Unidades Compradas", f"{int(tot_comp_uds):,}")
-    col_cmp3.metric("Proveedores Involucrados", f"{cant_proveedores_activos}")
+    col_cmp2.metric("💵 Compras Contado", f"${tot_cmp_contado:,.2f}")
+    col_cmp3.metric("📑 Compras Crédito", f"${tot_cmp_credito:,.2f}")
+    col_cmp4.metric("Unidades Ingresadas", f"{int(tot_comp_uds):,}")
+    col_cmp5.metric("Nº Facturas de Compra", f"{int(tot_facturas_compra):,}")
 
     st.divider()
 
     col_c_izq, col_c_der = st.columns(2)
     with col_c_izq:
-        st.markdown("#### 📅 Inversión en Compras por Fecha (Últimos 30 Días)")
-        if not df_comp.empty:
-            fecha_max_comp = pd.to_datetime(df_comp["fecha"]).max()
+        st.markdown("#### 📅 Compras Diarias: Contado vs Crédito (Últimos 30 Días)")
+        if not df_c_dia.empty:
+            fecha_max_comp = pd.to_datetime(df_c_dia["fecha"]).max()
             fecha_corte_comp_30d = fecha_max_comp - pd.Timedelta(days=29)
-            df_comp_30d = df_comp[pd.to_datetime(df_comp["fecha"]) >= fecha_corte_comp_30d]
+            df_c_dia_30d = df_c_dia[pd.to_datetime(df_c_dia["fecha"]) >= fecha_corte_comp_30d]
 
-            df_c_fecha = df_comp_30d.groupby("fecha").agg(
-                total_compra_monto=("total_compra_monto", "sum"),
-                unidades_compradas=("unidades_compradas", "sum")
+            df_c_dia_agg = df_c_dia_30d.groupby("fecha").agg(
+                compras_contado=("compras_contado", "sum"),
+                compras_credito=("compras_credito", "sum"),
+                total_comprado=("total_comprado", "sum"),
+                unidades_compradas=("unidades_compradas", "sum"),
+                numero_facturas_compra=("numero_facturas_compra", "sum")
             ).reset_index().sort_values("fecha")
-            fig_cf = px.bar(
-                df_c_fecha,
-                x="fecha",
-                y="total_compra_monto",
-                labels={"total_compra_monto": "Inversión ($)", "fecha": "Fecha"},
-                title="Compras Diarias (Últimos 30 Días)",
-                color_discrete_sequence=["#e67e22"],
-                custom_data=["unidades_compradas"]
+
+            custom_info_cmp = list(zip(
+                df_c_dia_agg["total_comprado"],
+                df_c_dia_agg["unidades_compradas"],
+                df_c_dia_agg["numero_facturas_compra"],
+                df_c_dia_agg["compras_contado"],
+                df_c_dia_agg["compras_credito"]
+            ))
+
+            fig_cf = go.Figure()
+
+            # Barra Compras Contado
+            fig_cf.add_trace(go.Bar(
+                x=df_c_dia_agg["fecha"],
+                y=df_c_dia_agg["compras_contado"],
+                name="💵 Compra Contado",
+                marker_color="#27ae60",
+                customdata=custom_info_cmp,
+                hovertemplate="💵 <b>Contado:</b> $%{y:,.2f}<extra></extra>"
+            ))
+
+            # Barra Compras Crédito
+            fig_cf.add_trace(go.Bar(
+                x=df_c_dia_agg["fecha"],
+                y=df_c_dia_agg["compras_credito"],
+                name="📑 Compra Crédito",
+                marker_color="#e67e22",
+                customdata=custom_info_cmp,
+                hovertemplate="📑 <b>Crédito:</b> $%{y:,.2f}<extra></extra>"
+            ))
+
+            # Marcador totalizador para hover unificado
+            fig_cf.add_trace(go.Scatter(
+                x=df_c_dia_agg["fecha"],
+                y=df_c_dia_agg["total_comprado"],
+                name="Total Comprado",
+                mode="markers",
+                marker=dict(size=0, opacity=0),
+                customdata=custom_info_cmp,
+                hovertemplate="📦 <b>Total Compras Día:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata[1]:,} | <b>Facturas:</b> %{customdata[2]}<extra></extra>"
+            ))
+
+            fig_cf.update_layout(
+                title="Compras Diarias por Modalidad de Pago (Últimos 30 Días)",
+                barmode="stack",
+                hovermode="x unified",
+                xaxis_title="Fecha",
+                yaxis_title="Monto Inversión ($)",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
-            fig_cf.update_traces(
-                hovertemplate="<b>Fecha:</b> %{x}<br>" +
-                              "<b>Inversión:</b> $%{y:,.2f}<br>" +
-                              "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
-            )
-            fig_cf.update_layout(hovermode="x unified")
             st.plotly_chart(fig_cf, use_container_width=True)
         else:
             st.info("Sin compras registradas para estos filtros.")
@@ -1146,12 +1344,12 @@ with tab_compras:
 
     st.divider()
 
-    # Compras por Laboratorio (con selector de ordenamiento)
+    # Compras por Laboratorio (Top 20 + Otros con selector de ordenamiento)
     col_c_lab_bar, col_c_lab_pie = st.columns([3, 2])
     with col_c_lab_bar:
         col_t_lab_c, col_c_crit_lab = st.columns([2, 1])
         with col_t_lab_c:
-            st.markdown("#### 🧪 Compras por Laboratorio")
+            st.markdown("#### 🧪 Top 20 Compras por Laboratorio")
         with col_c_crit_lab:
             criterio_orden_lab = st.selectbox(
                 "Ordenar por:",
@@ -1161,18 +1359,34 @@ with tab_compras:
             )
 
         if not df_comp.empty:
-            df_c_lab = df_comp.groupby("nombre_laboratorio").agg(
+            df_c_lab_raw = df_comp.groupby("nombre_laboratorio").agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
             ).reset_index()
 
+            # Ordenar según criterio seleccionado
+            col_orden = "total_compra_monto" if criterio_orden_lab == "Inversión Total ($)" else "unidades_compradas"
+            df_c_lab_sorted = df_c_lab_raw.sort_values(col_orden, ascending=False)
+
+            # Separar Top 20 y agrupar el resto en "Otros"
+            if len(df_c_lab_sorted) > 20:
+                df_top20 = df_c_lab_sorted.head(20).copy()
+                df_resto = df_c_lab_sorted.iloc[20:]
+
+                fila_otros = pd.DataFrame([{
+                    "nombre_laboratorio": "Otros Laboratorios",
+                    "total_compra_monto": df_resto["total_compra_monto"].sum(),
+                    "unidades_compradas": df_resto["unidades_compradas"].sum()
+                }])
+                df_c_lab_ordenado = pd.concat([df_top20, fila_otros], ignore_index=True)
+            else:
+                df_c_lab_ordenado = df_c_lab_sorted.copy()
+
             if criterio_orden_lab == "Inversión Total ($)":
-                df_c_lab_ordenado = df_c_lab.sort_values("total_compra_monto", ascending=False)
                 eje_x_lab = "total_compra_monto"
                 lbl_x_lab = "Inversión ($)"
                 paleta_lab = "Viridis"
             else:
-                df_c_lab_ordenado = df_c_lab.sort_values("unidades_compradas", ascending=False)
                 eje_x_lab = "unidades_compradas"
                 lbl_x_lab = "Unidades Compradas"
                 paleta_lab = "Purples"
@@ -1183,6 +1397,7 @@ with tab_compras:
                 y="nombre_laboratorio",
                 orientation="h",
                 labels={eje_x_lab: lbl_x_lab, "nombre_laboratorio": "Laboratorio"},
+                title="Top 20 Laboratorios + Otros",
                 color=eje_x_lab,
                 color_continuous_scale=paleta_lab,
                 custom_data=["unidades_compradas", "total_compra_monto"]
@@ -1201,7 +1416,7 @@ with tab_compras:
         st.markdown("#### 🥧 Distribución de Compras por Laboratorio")
         if not df_comp.empty:
             fig_clab_pie = px.pie(
-                df_c_lab,
+                df_c_lab_ordenado,
                 names="nombre_laboratorio",
                 values="total_compra_monto",
                 hole=0.4,
@@ -1324,6 +1539,84 @@ with tab_inventario:
     col_inv3.metric("📈 Margen Bruto Potencial", f"{margen_potencial:.1f}%")
     col_inv4.metric("📦 Unidades en Stock", f"{int(tot_unidades_stock):,}")
     col_inv5.metric("🚨 Quiebres de Stock", f"{len(df_quiebres):,}")
+
+    st.divider()
+
+    # --- NUEVA SECCIÓN: EVOLUCIÓN HISTÓRICA DEL VALOR DE INVENTARIO POR MES ---
+    st.markdown("#### 📅 Evolución del Valor de Inventario Mes a Mes")
+    if not df_inv_mes.empty:
+        df_inv_mes_agg = df_inv_mes.groupby("periodo_mes").agg(
+            valor_total_costo=("valor_total_costo", "sum"),
+            valor_total_pvp=("valor_total_pvp", "sum"),
+            total_unidades=("total_unidades", "sum")
+        ).reset_index().sort_values("periodo_mes")
+
+        df_inv_mes_agg["margen_potencial_pct"] = round(
+            (df_inv_mes_agg["valor_total_pvp"] - df_inv_mes_agg["valor_total_costo"]) / df_inv_mes_agg["valor_total_pvp"] * 100, 2
+        )
+
+        col_g_imes, col_t_imes = st.columns([3, 2])
+
+        with col_g_imes:
+            fig_imes = go.Figure()
+
+            # Barras Valor Costo
+            fig_imes.add_trace(go.Bar(
+                x=df_inv_mes_agg["periodo_mes"],
+                y=df_inv_mes_agg["valor_total_costo"],
+                name="💰 Valor Costo ($)",
+                marker_color="#34495e",
+                hovertemplate="<b>Mes:</b> %{x}<br><b>Valor Costo:</b> $%{y:,.2f}<extra></extra>"
+            ))
+
+            # Barras Valor PVP
+            fig_imes.add_trace(go.Bar(
+                x=df_inv_mes_agg["periodo_mes"],
+                y=df_inv_mes_agg["valor_total_pvp"],
+                name="🏷️ Valor PVP ($)",
+                marker_color="#1abc9c",
+                hovertemplate="<b>Mes:</b> %{x}<br><b>Valor PVP:</b> $%{y:,.2f}<extra></extra>"
+            ))
+
+            # Línea de Unidades en Stock
+            fig_imes.add_trace(go.Scatter(
+                x=df_inv_mes_agg["periodo_mes"],
+                y=df_inv_mes_agg["total_unidades"],
+                name="📦 Total Unidades",
+                mode="lines+markers",
+                line=dict(color="#e74c3c", width=2, dash="dot"),
+                marker=dict(size=7),
+                yaxis="y2",
+                hovertemplate="<b>Unidades en Stock:</b> %{y:,}<extra></extra>"
+            ))
+
+            fig_imes.update_layout(
+                title="Histórico Mensual del Capital Invertido y Potencial Comercial",
+                barmode="group",
+                hovermode="x unified",
+                xaxis_title="Mes (Cierre Mensual)",
+                yaxis=dict(title="Valor Total en Dólares ($)"),
+                yaxis2=dict(title="Unidades en Stock", overlaying="y", side="right", showgrid=False),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_imes, use_container_width=True)
+
+        with col_t_imes:
+            st.markdown("##### 📋 Cierres Mensuales de Inventario")
+            st.dataframe(
+                df_inv_mes_agg[["periodo_mes", "valor_total_costo", "valor_total_pvp", "margen_potencial_pct", "total_unidades"]],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "periodo_mes": "Mes",
+                    "valor_total_costo": st.column_config.NumberColumn("Valor Costo ($)", format="$%.2f"),
+                    "valor_total_pvp": st.column_config.NumberColumn("Valor PVP ($)", format="$%.2f"),
+                    "margen_potencial_pct": st.column_config.NumberColumn("Margen %", format="%.1f%%"),
+                    "total_unidades": st.column_config.NumberColumn("Unidades", format="%d")
+                }
+            )
+    else:
+        st.info("Sin registros históricos de inventario mensual.")
 
     st.divider()
 

@@ -103,6 +103,23 @@ CREATE TABLE IF NOT EXISTS kpi_inventario_sucursal (
     UNIQUE KEY uq_sucursal_producto (id_sucursal, id_producto)
 );
 
+-- 8.1. KPI: Histórico Mensual de Valorización de Inventario por Farmacia
+CREATE TABLE IF NOT EXISTS kpi_inventario_mensual (
+    id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_sucursal INT NOT NULL,
+    periodo_mes VARCHAR(7) NOT NULL,              -- Formato YYYY-MM (ej: '2026-10')
+    fecha_cierre DATE NOT NULL,                   -- Fecha del último día o corte del mes
+    total_unidades INT NOT NULL DEFAULT 0,        -- Total de unidades en existencia al cierre
+    valor_total_costo DECIMAL(14, 2) NOT NULL,    -- Valorización a costo de reposición en USD
+    valor_total_pvp DECIMAL(14, 2) NOT NULL,      -- Valorización a precio de venta al público (PVP) en USD
+    margen_potencial_pct DECIMAL(5, 2) GENERATED ALWAYS AS (
+        CASE WHEN valor_total_pvp > 0 THEN ((valor_total_pvp - valor_total_costo) / valor_total_pvp * 100) ELSE 0 END
+    ) STORED,
+    ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
+    UNIQUE KEY uq_sucursal_mes_inv (id_sucursal, periodo_mes)
+);
+
 -- 9. KPI: Ventas Diarias Consolidadas por Producto
 CREATE TABLE IF NOT EXISTS kpi_ventas_por_producto (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -117,7 +134,22 @@ CREATE TABLE IF NOT EXISTS kpi_ventas_por_producto (
     UNIQUE KEY uq_suc_fecha_prod (id_sucursal, fecha, id_producto)
 );
 
--- 10. KPI: Compras y Abastecimiento Diario por Producto y Proveedor
+-- 10. KPI: Compras y Abastecimiento Diario Global por Farmacia (Consolidado de Compras)
+CREATE TABLE IF NOT EXISTS kpi_compras_diarias (
+    id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id_sucursal INT NOT NULL,
+    fecha DATE NOT NULL,
+    total_comprado DECIMAL(12, 2) NOT NULL,        -- Inversión total en compras del día en USD
+    unidades_compradas INT NOT NULL DEFAULT 0,     -- Total de unidades/cajas ingresadas
+    numero_facturas_compra INT NOT NULL DEFAULT 0, -- Cantidad de facturas / recepciones de compras
+    compras_contado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Monto de compras pagadas de contado
+    compras_credito DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Monto de compras a crédito de proveedores
+    ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
+    UNIQUE KEY uq_sucursal_fecha_compra (id_sucursal, fecha)
+);
+
+-- 10.1. KPI: Compras y Abastecimiento Diario por Producto y Proveedor
 CREATE TABLE IF NOT EXISTS kpi_compras_por_producto (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
