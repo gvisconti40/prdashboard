@@ -1441,8 +1441,15 @@ with tab_compras:
         col_cmes_lab, col_cmes_prv = st.columns(2)
 
         with col_cmes_lab:
-            st.markdown("##### 🧪 Compras Mensuales por Laboratorio ($)")
-            df_mes_lab = df_comp_mes.groupby(["periodo_mes", "nombre_laboratorio"]).agg(
+            st.markdown("##### 🧪 Compras Mensuales por Laboratorio ($) [Top 20 + Otros]")
+            # Identificar Top 20 laboratorios globales en el período
+            top20_labs_globales = df_comp.groupby("nombre_laboratorio")["total_compra_monto"].sum().nlargest(20).index.tolist()
+            df_comp_mes_lab = df_comp_mes.copy()
+            df_comp_mes_lab["lab_display"] = df_comp_mes_lab["nombre_laboratorio"].apply(
+                lambda x: x if x in top20_labs_globales else "Otros Laboratorios"
+            )
+
+            df_mes_lab = df_comp_mes_lab.groupby(["periodo_mes", "lab_display"]).agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
             ).reset_index().sort_values("periodo_mes")
@@ -1451,11 +1458,11 @@ with tab_compras:
                 df_mes_lab,
                 x="periodo_mes",
                 y="total_compra_monto",
-                color="nombre_laboratorio",
-                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "nombre_laboratorio": "Laboratorio"},
-                title="Evolución Mensual de Compras por Laboratorio",
+                color="lab_display",
+                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "lab_display": "Laboratorio"},
+                title="Evolución Mensual de Compras por Laboratorio (Top 20 + Otros)",
                 barmode="stack",
-                custom_data=["nombre_laboratorio", "unidades_compradas"]
+                custom_data=["lab_display", "unidades_compradas"]
             )
             fig_mes_lab.update_traces(
                 hovertemplate="<b>Mes:</b> %{x}<br><b>Laboratorio:</b> %{customdata[0]}<br><b>Inversión:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata[1]:,}<extra></extra>"
@@ -1467,8 +1474,15 @@ with tab_compras:
             st.plotly_chart(fig_mes_lab, use_container_width=True)
 
         with col_cmes_prv:
-            st.markdown("##### 🚚 Compras Mensuales por Proveedor / Droguería ($)")
-            df_mes_prv = df_comp_mes.groupby(["periodo_mes", "nombre_proveedor"]).agg(
+            st.markdown("##### 🚚 Compras Mensuales por Proveedor / Droguería ($) [Top 20 + Otros]")
+            # Identificar Top 20 proveedores globales en el período
+            top20_prvs_globales = df_comp.groupby("nombre_proveedor")["total_compra_monto"].sum().nlargest(20).index.tolist()
+            df_comp_mes_prv = df_comp_mes.copy()
+            df_comp_mes_prv["prv_display"] = df_comp_mes_prv["nombre_proveedor"].apply(
+                lambda x: x if x in top20_prvs_globales else "Otros Proveedores"
+            )
+
+            df_mes_prv = df_comp_mes_prv.groupby(["periodo_mes", "prv_display"]).agg(
                 total_compra_monto=("total_compra_monto", "sum"),
                 unidades_compradas=("unidades_compradas", "sum")
             ).reset_index().sort_values("periodo_mes")
@@ -1477,11 +1491,11 @@ with tab_compras:
                 df_mes_prv,
                 x="periodo_mes",
                 y="total_compra_monto",
-                color="nombre_proveedor",
-                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "nombre_proveedor": "Droguería"},
-                title="Evolución Mensual de Compras por Droguería",
+                color="prv_display",
+                labels={"periodo_mes": "Mes", "total_compra_monto": "Inversión ($)", "prv_display": "Droguería"},
+                title="Evolución Mensual de Compras por Droguería (Top 20 + Otros)",
                 barmode="stack",
-                custom_data=["nombre_proveedor", "unidades_compradas"]
+                custom_data=["prv_display", "unidades_compradas"]
             )
             fig_mes_prv.update_traces(
                 hovertemplate="<b>Mes:</b> %{x}<br><b>Droguería:</b> %{customdata[0]}<br><b>Inversión:</b> $%{y:,.2f}<br><b>Unidades:</b> %{customdata[1]:,}<extra></extra>"
