@@ -41,30 +41,30 @@ CREATE TABLE IF NOT EXISTS maestro_laboratorios (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 4. TABLA MAESTRA: TIPOS DE PROVEEDOR
+-- 4. TABLA MAESTRA: TIPOS DE PROVEEDOR (Norma MIVO ERP 7.1)
 CREATE TABLE IF NOT EXISTS maestro_tipos_proveedor (
     id_tipo_proveedor INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_tipo_proveedor VARCHAR(6) NOT NULL UNIQUE,  -- Código alfanumérico de 6 caracteres (Ej: DROGUE, DISTRI, FABRIC, IMPORT, SERVIC)
-    descripcion VARCHAR(100) NOT NULL,                 -- Descripción detallada
+    codigo_tipo_proveedor VARCHAR(10) NOT NULL UNIQUE,  -- Códigos oficiales MIVO: 01, 02, 03... 10, 99
+    descripcion VARCHAR(120) NOT NULL,                  -- Descripción oficial según informe gerencial
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 5. TABLA MAESTRA: SEGMENTOS DE PROVEEDOR
+-- 5. TABLA MAESTRA: SEGMENTOS DE PROVEEDOR (Norma MIVO ERP 7.1)
 CREATE TABLE IF NOT EXISTS maestro_segmentos_proveedor (
     id_segmento INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_segmento VARCHAR(6) NOT NULL UNIQUE,        -- Código alfanumérico de 6 caracteres (Ej: MEDICA, MISCEL, EQUIPO, ALIMEN, GENERI)
-    descripcion VARCHAR(100) NOT NULL,                 -- Descripción detallada
+    codigo_segmento VARCHAR(10) NOT NULL UNIQUE,        -- Códigos oficiales MIVO: P0101 a P0111, P0201 a P0801, P9999
+    descripcion VARCHAR(120) NOT NULL,                  -- Droguerías Estratégicas, Habituales, Laboratorios, etc.
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 6. TABLA MAESTRA: PROVEEDORES / DROGUERÍAS / DISTRIBUIDORES
+-- 6. TABLA MAESTRA: PROVEEDORES / DROGUERÍAS / DISTRIBUIDORES (Homologado MIVO ERP 7.1)
 CREATE TABLE IF NOT EXISTS maestro_proveedores (
     id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_proveedor VARCHAR(10) NOT NULL UNIQUE,  -- Código de proveedor de 10 caracteres (Ej: PRV0000001, COBECA0001)
-    nombre_proveedor VARCHAR(150) NOT NULL,        -- Ej: Droguería Cobeca, Droguería Nena, Drolanca
-    rif_proveedor VARCHAR(20),                     -- Ej: J-12345678-0
-    tipo_proveedor VARCHAR(6) DEFAULT 'DROGUE',    -- Clave foránea al tipo de proveedor
-    segmento VARCHAR(6) DEFAULT 'MEDICA',          -- Clave foránea al segmento de proveedor
+    codigo_proveedor VARCHAR(20) NOT NULL UNIQUE,       -- Código de proveedor (Ej: PRV0000001, COBECA0001)
+    nombre_proveedor VARCHAR(150) NOT NULL,             -- Ej: Droguería Cobeca, Droguería Nena, Drolanca
+    rif_proveedor VARCHAR(20),                          -- Ej: J-00012345-1
+    tipo_proveedor VARCHAR(10) DEFAULT '01',            -- Clave foránea al tipo de proveedor oficial (01 Mercancía)
+    segmento VARCHAR(10) DEFAULT 'P0101',               -- Clave foránea al segmento de proveedor (P0101 Droguerías Estratégicas)
     telefono VARCHAR(30),
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tipo_proveedor) REFERENCES maestro_tipos_proveedor(codigo_tipo_proveedor)
@@ -73,16 +73,37 @@ CREATE TABLE IF NOT EXISTS maestro_proveedores (
         ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- 7. TABLA MAESTRA: CLIENTES (Particulares, Seguros y Convenios Corporativos)
+-- 7. TABLA MAESTRA: TIPOS Y SEGMENTOS DE CLIENTE (Norma MIVO ERP 7.1)
+CREATE TABLE IF NOT EXISTS maestro_tipos_cliente (
+    id_tipo_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_tipo_cliente VARCHAR(10) NOT NULL UNIQUE,    -- Códigos oficiales MIVO: A01 (Contado), A02 (Crédito)
+    descripcion VARCHAR(100) NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS maestro_segmentos_cliente (
+    id_segmento_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_segmento_cliente VARCHAR(10) NOT NULL UNIQUE,-- Códigos oficiales MIVO: C01 a C05, C99
+    descripcion VARCHAR(100) NOT NULL,                  -- Mostrador, Empresa, Intercompañía, Instituciones, Empleados
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 7.1 TABLA MAESTRA: CLIENTES (Normalizado con Tipos y Segmentos MIVO ERP 7.1)
 CREATE TABLE IF NOT EXISTS maestro_clientes (
     id_cliente INT AUTO_INCREMENT PRIMARY KEY,
-    codigo_cliente VARCHAR(10) NOT NULL UNIQUE,    -- Código de cliente de 10 caracteres (Ej: CTE0000001, CLI0000045)
-    nombre_cliente VARCHAR(150) NOT NULL,          -- Nombre o Razón Social
-    tipo_cliente ENUM('Particular', 'Seguro / Empresa', 'Convenio') NOT NULL DEFAULT 'Particular',
-    identificacion VARCHAR(30),                    -- Cédula o RIF
+    codigo_cliente VARCHAR(20) NOT NULL UNIQUE,         -- Código de cliente de hasta 20 caracteres
+    nombre_cliente VARCHAR(150) NOT NULL,               -- Nombre o Razón Social
+    tipo_cliente VARCHAR(10) NOT NULL DEFAULT 'A01',    -- Enlace a maestro_tipos_cliente (A01 / A02)
+    segmento_cliente VARCHAR(10) NOT NULL DEFAULT 'C01',-- Enlace a maestro_segmentos_cliente (C01..C05, C99)
+    identificacion VARCHAR(30),                         -- Cédula o RIF
     telefono VARCHAR(30),
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_cte_tipo (tipo_cliente)
+    INDEX idx_cte_tipo (tipo_cliente),
+    INDEX idx_cte_seg (segmento_cliente),
+    FOREIGN KEY (tipo_cliente) REFERENCES maestro_tipos_cliente(codigo_tipo_cliente)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (segmento_cliente) REFERENCES maestro_segmentos_cliente(codigo_segmento_cliente)
+        ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 -- 8. TABLA MAESTRA: PRODUCTOS (Normalizada con enlace a Líneas, Sublíneas y Laboratorios)

@@ -1,8 +1,45 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import json
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
+
+# --- Configuración de Plantilla Visual Global para Gráficos (Paleta Oficial de la Maqueta) ---
+tema_farma = go.layout.Template()
+tema_farma.layout.plot_bgcolor = "#5a6876"
+tema_farma.layout.paper_bgcolor = "#475564"
+tema_farma.layout.font = dict(color="#f1f5f9", family="Inter, sans-serif")
+tema_farma.layout.xaxis = dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)")
+tema_farma.layout.yaxis = dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)")
+tema_farma.layout.hoverlabel = dict(
+    bgcolor="rgba(15, 23, 42, 0.95)",
+    bordercolor="#0d9488",
+    font=dict(color="#ffffff", size=13, family="Inter, sans-serif")
+)
+
+pio.templates["farma_center_theme"] = tema_farma
+pio.templates.default = "farma_center_theme"
+
+def aplicar_estilo_farma(fig):
+    if fig is None:
+        return fig
+    fig.update_layout(
+        plot_bgcolor="#5a6876",
+        paper_bgcolor="#475564",
+        font=dict(color="#f1f5f9", family="Inter, sans-serif"),
+        hoverlabel=dict(
+            bgcolor="rgba(15, 23, 42, 0.95)",
+            bordercolor="#0d9488",
+            font=dict(color="#ffffff", size=13, family="Inter, sans-serif")
+        )
+    )
+    fig.update_xaxes(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)")
+    fig.update_yaxes(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)")
+    return fig
+
 from sqlalchemy import create_engine, text
 from datetime import datetime, timedelta
 import random
@@ -10,7 +47,7 @@ import os
 
 # --- Configuración de Marca y Empresa ---
 NOMBRE_EMPRESA = "GRUPO FARMA CENTER"
-SLOGAN_EMPRESA = "Farmacia La Corina PC, C.A. – Cuadro de Mando Integral y Control Operativo MIVO 7.1"
+SLOGAN_EMPRESA = "Cuadro de Mando Integral y Control Operativo MIVO 7.1"
 ICONO_PAGINA   = "💊"
 
 # Rutas de logotipos (puedes colocar tu archivo logo.png en la carpeta assets/)
@@ -24,6 +61,211 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- Inyección de Estilos de Diseño Avanzados: Glassmorphism, Paleta Marina y Grilla ---
+st.markdown("""
+<style>
+/* 1. Fondo base degradado azul-pizarra y marina intermedio (#101726 a #1A223B) */
+.stApp {
+    background: linear-gradient(135deg, #101726 0%, #151d30 50%, #1a223b 100%) !important;
+    color: #e2e8f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 2. Ancho fijo optimizado de Sidebar (280px - 300px) */
+[data-testid="stSidebar"] {
+    background: rgba(16, 23, 38, 0.75) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+    min-width: 280px !important;
+    max-width: 300px !important;
+}
+
+/* 3. Tarjetas KPI Blancas / Clean Glassmorphism idénticas a la maqueta */
+.kpi-card-white {
+    background: #ffffff !important;
+    border-radius: 14px !important;
+    padding: 16px 18px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card-white:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.kpi-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+    letter-spacing: 0.02em;
+}
+
+.kpi-icon-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.kpi-value {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.kpi-subtext {
+    font-size: 0.74rem;
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kpi-sparkline {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    opacity: 0.7;
+}
+
+/* 4. Paneles y Contenedores Glassmorphism Oscuros */
+.panel-dark-glass {
+    background: rgba(22, 31, 48, 0.7) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 16px !important;
+    padding: 18px 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+    margin-bottom: 20px;
+}
+
+/* 5. Estilos de Pestañas y Navegación */
+.stTabs [data-baseweb="tab-list"] {
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 12px !important;
+    padding: 4px !important;
+    gap: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: #94a3b8 !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* 6. Tablas de Datos Estilizadas y Efecto Hover Teal */
+[data-testid="stDataFrame"] {
+    background: rgba(30, 41, 59, 0.35) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+}
+
+/* 7. Chips / Badges Personalizados */
+.badge-lab {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.badge-pfizer { background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-novartis { background: rgba(139, 92, 246, 0.18); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+.badge-leti { background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-calox { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+.badge-other { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.25); }
+
+/* Fila interactiva con resplandor teal */
+.table-glass-row:hover {
+    background: rgba(13, 148, 136, 0.15) !important;
+    box-shadow: inset 0px 0px 8px rgba(13, 148, 136, 0.3) !important;
+    cursor: pointer;
+}
+
+/* 8. ADAPTACIONES RESPONSIVAS EXCLUSIVAS PARA TELÉFONO / MÓVIL (< 768px) */
+@media (max-width: 768px) {
+    /* En móviles, transformar las 6 columnas en una cuadrícula flexible de 2 columnas */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+    
+    [data-testid="column"] {
+        flex: 1 1 calc(50% - 12px) !important;
+        min-width: calc(50% - 12px) !important;
+    }
+
+    /* Calibrar el tamaño de la tarjeta KPI en pantallas estrechas */
+    .kpi-card-white {
+        padding: 12px 14px !important;
+        min-height: 95px !important;
+    }
+
+    .kpi-value {
+        font-size: 1.35rem !important;
+    }
+
+    .kpi-title {
+        font-size: 0.74rem !important;
+    }
+
+    .kpi-sparkline {
+        width: 50px !important;
+        height: 18px !important;
+        bottom: 6px !important;
+        right: 8px !important;
+    }
+
+    /* Pestañas con desplazamiento táctil horizontal cómodo */
+    .stTabs [data-baseweb="tab-list"] {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        padding-bottom: 6px !important;
+    }
+
+    /* Ajuste de márgenes en móviles */
+    .panel-dark-glass {
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 
 # --- Conexión a MySQL en vivo ---
 @st.cache_resource
@@ -42,10 +284,10 @@ def generar_datos_prueba():
     # 1. Maestro Sucursales (con Zona y Código de 4 chars) - Grupo Farma Center / Farmacia La Corina
     sucursales = [
         {"id_sucursal": 1, "codigo_sucursal": "F001", "nombre": "Farmacia La Corina (Sede Principal)", "ciudad": "Puerto Cabello", "zona": "Carabobo"},
-        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia Farma Center Centro", "ciudad": "Valencia", "zona": "Carabobo"},
-        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Farma Center Norte", "ciudad": "Naguanagua", "zona": "Carabobo"},
-        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia Farma Center Express", "ciudad": "Guacara", "zona": "Carabobo"},
-        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia Farma Center San Diego", "ciudad": "San Diego", "zona": "Carabobo"}
+        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia La corina 2", "ciudad": "Puerto Cabello", "zona": "Carabobo"},
+        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Morillo", "ciudad": "Valencia", "zona": "Carabobo"},
+        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia farmavital", "ciudad": "Guacara", "zona": "Carabobo"},
+        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia Descuento a su salud", "ciudad": "San Diego", "zona": "Carabobo"}
     ]
     df_suc = pd.DataFrame(sucursales)
 
@@ -522,18 +764,27 @@ def generar_datos_prueba():
     }
 
 # --- Encabezado Principal y Marca ---
-if os.path.exists(RUTA_LOGO):
-    # Si existe el logo en assets/logo.png, muestra logo + título alineados
-    col_logo, col_titulo = st.columns([1, 6])
-    with col_logo:
+col_logo, col_titulo = st.columns([1, 8])
+with col_logo:
+    if os.path.exists(RUTA_LOGO):
         st.image(RUTA_LOGO, use_container_width=True)
-    with col_titulo:
-        st.title(NOMBRE_EMPRESA)
-        st.caption(SLOGAN_EMPRESA)
-else:
-    # Si aún no has pegado el logo, muestra el título con su icono institucional
-    st.title(f"{ICONO_PAGINA} {NOMBRE_EMPRESA}")
-    st.caption(SLOGAN_EMPRESA)
+    else:
+        st.markdown("""
+        <div style="background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 14px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 0 15px rgba(16,185,129,0.3);">
+            ➕
+        </div>
+        """, unsafe_allow_html=True)
+with col_titulo:
+    st.markdown(f"""
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+        <h1 style="margin: 0; padding: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: #ffffff;">
+            {NOMBRE_EMPRESA}
+        </h1>
+        <p style="margin: 2px 0 0 0; padding: 0; font-size: 0.88rem; color: #94a3b8; font-weight: 500;">
+            {SLOGAN_EMPRESA}
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- Barra lateral de Configuración y Filtros ---
 st.sidebar.header("⚙️ Configuración & Filtros")
@@ -670,6 +921,23 @@ for _, row in df_labs_cat.iterrows():
 lab_label = st.sidebar.selectbox("Laboratorio (Marca):", options=list(labs_opciones.keys()))
 id_lab_sel = labs_opciones[lab_label]
 
+# 6.1 Filtro por Artículo / Producto
+df_articulos_disponibles = df_catalogo_prod.copy()
+if id_linea_sel is not None and "id_linea" in df_articulos_disponibles.columns:
+    df_articulos_disponibles = df_articulos_disponibles[df_articulos_disponibles["id_linea"] == id_linea_sel]
+if id_sublinea_sel is not None and "id_sublinea" in df_articulos_disponibles.columns:
+    df_articulos_disponibles = df_articulos_disponibles[df_articulos_disponibles["id_sublinea"] == id_sublinea_sel]
+if id_lab_sel is not None and "id_laboratorio" in df_articulos_disponibles.columns:
+    df_articulos_disponibles = df_articulos_disponibles[df_articulos_disponibles["id_laboratorio"] == id_lab_sel]
+
+articulos_opciones = {"Todos los artículos": None}
+for _, row in df_articulos_disponibles.iterrows():
+    sku_txt = f"[{row['codigo_articulo']}] " if pd.notna(row.get('codigo_articulo')) else ""
+    articulos_opciones[f"{sku_txt}{row['nombre_producto']}"] = int(row['id_producto'])
+
+articulo_label = st.sidebar.selectbox("Artículo / Producto:", options=list(articulos_opciones.keys()))
+id_articulo_sel = articulos_opciones[articulo_label]
+
 # 7. Filtro por Tipo de Proveedor (Alfanumérico 6 caracteres desde maestro_tipos_proveedor)
 map_desc_tipo = {}
 if "df_tipos_prov_cat" in locals() and not df_tipos_prov_cat.empty:
@@ -740,6 +1008,7 @@ tab_ventas, tab_compras, tab_inventario, tab_vendedores, tab_finanzas, tab_suger
 filtro_linea_activo = (id_linea_sel is not None)
 filtro_sublinea_activo = (id_sublinea_sel is not None)
 filtro_lab_activo = (id_lab_sel is not None)
+filtro_articulo_activo = (id_articulo_sel is not None)
 filtro_prov_activo = (id_prov_sel is not None)
 filtro_tipo_prov_activo = (tipo_prov_sel != "Todos los tipos")
 filtro_seg_prov_activo = (seg_prov_sel != "Todos los segmentos")
@@ -759,9 +1028,11 @@ if modo_datos == "Simulación (Datos de Prueba)":
         df_v_prod = df_v_prod[df_v_prod["id_sublinea"] == id_sublinea_sel]
     if filtro_lab_activo:
         df_v_prod = df_v_prod[df_v_prod["id_laboratorio"] == id_lab_sel]
+    if filtro_articulo_activo:
+        df_v_prod = df_v_prod[df_v_prod["id_producto"] == id_articulo_sel]
 
     # 2. Ventas Diarias Globales
-    if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo:
+    if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_articulo_activo:
         df_v_dia = df_v_prod.groupby(["fecha"]).agg(
             total_facturado=("total_venta_monto", "sum"),
             numero_operaciones=("unidades_vendidas", "count")
@@ -789,6 +1060,8 @@ if modo_datos == "Simulación (Datos de Prueba)":
         df_comp = df_comp[df_comp["id_sublinea"] == id_sublinea_sel]
     if filtro_lab_activo:
         df_comp = df_comp[df_comp["id_laboratorio"] == id_lab_sel]
+    if filtro_articulo_activo:
+        df_comp = df_comp[df_comp["id_producto"] == id_articulo_sel]
     if filtro_tipo_prov_activo:
         df_comp = df_comp[df_comp["tipo_proveedor"].astype(str).str.upper() == tipo_prov_sel]
     if filtro_seg_prov_activo:
@@ -797,7 +1070,7 @@ if modo_datos == "Simulación (Datos de Prueba)":
         df_comp = df_comp[df_comp["id_proveedor"] == id_prov_sel]
 
     # Compras Diarias Globales
-    if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_prov_activo or filtro_tipo_prov_activo or filtro_seg_prov_activo:
+    if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_articulo_activo or filtro_prov_activo or filtro_tipo_prov_activo or filtro_seg_prov_activo:
         if not df_comp.empty:
             df_c_dia = df_comp.groupby(["fecha"]).agg(
                 total_comprado=("total_compra_monto", "sum"),
@@ -828,6 +1101,8 @@ if modo_datos == "Simulación (Datos de Prueba)":
         df_inv = df_inv[df_inv["id_sublinea"] == id_sublinea_sel]
     if filtro_lab_activo:
         df_inv = df_inv[df_inv["id_laboratorio"] == id_lab_sel]
+    if filtro_articulo_activo:
+        df_inv = df_inv[df_inv["id_producto"] == id_articulo_sel]
 
     # Histórico de Inventario Mensual
     df_inv_mes = datos["inventario_mensual"].merge(datos["sucursales"], on="id_sucursal")
@@ -917,11 +1192,13 @@ else:
             q_v_prod += f" AND p.id_sublinea = {id_sublinea_sel}"
         if filtro_lab_activo:
             q_v_prod += f" AND p.id_laboratorio = {id_lab_sel}"
+        if filtro_articulo_activo:
+            q_v_prod += f" AND p.id_producto = {id_articulo_sel}"
 
         df_v_prod = pd.read_sql(text(q_v_prod), conn)
 
         # 2. Ventas Diarias Globales
-        if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo:
+        if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_articulo_activo:
             if not df_v_prod.empty:
                 df_v_dia = df_v_prod.groupby(["fecha"]).agg(
                     total_facturado=("total_venta_monto", "sum"),
@@ -975,6 +1252,8 @@ else:
             q_comp += f" AND p.id_sublinea = {id_sublinea_sel}"
         if filtro_lab_activo:
             q_comp += f" AND p.id_laboratorio = {id_lab_sel}"
+        if filtro_articulo_activo:
+            q_comp += f" AND p.id_producto = {id_articulo_sel}"
         if filtro_tipo_prov_activo:
             q_comp += f" AND UPPER(pr.tipo_proveedor) = '{tipo_prov_sel}'"
         if filtro_seg_prov_activo:
@@ -985,7 +1264,7 @@ else:
         df_comp = pd.read_sql(text(q_comp), conn)
 
         # Compras Diarias Globales
-        if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_prov_activo or filtro_tipo_prov_activo or filtro_seg_prov_activo:
+        if filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo or filtro_articulo_activo or filtro_prov_activo or filtro_tipo_prov_activo or filtro_seg_prov_activo:
             if not df_comp.empty:
                 df_c_dia = df_comp.groupby(["fecha"]).agg(
                     total_comprado=("total_compra_monto", "sum"),
@@ -1047,6 +1326,8 @@ else:
             q_inv += f" AND p.id_sublinea = {id_sublinea_sel}"
         if filtro_lab_activo:
             q_inv += f" AND p.id_laboratorio = {id_lab_sel}"
+        if filtro_articulo_activo:
+            q_inv += f" AND p.id_producto = {id_articulo_sel}"
 
         df_inv = pd.read_sql(text(q_inv), conn)
 
@@ -1151,15 +1432,109 @@ with tab_ventas:
     tot_ops_credito = df_v_dia["operaciones_credito"].sum() if "operaciones_credito" in df_v_dia and not df_v_dia.empty else 0
     ticket_prom = (tot_facturado / tot_operaciones) if tot_operaciones > 0 else 0
 
-    col_v1, col_v2, col_v3, col_v4, col_v5, col_v6 = st.columns(6)
-    col_v1.metric("Ventas Totales ($)", f"${tot_facturado:,.2f}")
-    col_v2.metric("💵 Ventas Contado", f"${tot_contado:,.2f}", f"{pct_contado:.1f}% ({int(tot_ops_contado):,} ops)")
-    col_v3.metric("📑 Ventas Crédito", f"${tot_credito:,.2f}", f"{pct_credito:.1f}% ({int(tot_ops_credito):,} ops)")
-    col_v4.metric("Nº Operaciones (Tickets)", f"{int(tot_operaciones):,}")
-    col_v5.metric("Ticket Promedio", f"${ticket_prom:,.2f}")
-    col_v6.metric("Unidades Vendidas", f"{int(tot_unidades):,}")
+    # Helper para renderizar tarjetas KPI blancas con formato idéntico a la imagen
+    def format_kpi_num(val):
+        if val >= 1_000_000:
+            return f"${val/1_000_000:.2f}M"
+        elif val >= 1_000:
+            return f"${val/1_000:.0f}K"
+        return f"${val:,.2f}"
 
-    st.divider()
+    col_v1, col_v2, col_v3, col_v4, col_v5, col_v6 = st.columns(6)
+    
+    with col_v1:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">Ventas Totales</span>
+                <span class="kpi-icon-badge" style="background: rgba(234, 179, 8, 0.15); color: #ca8a04;">💰</span>
+            </div>
+            <div class="kpi-value">{format_kpi_num(tot_facturado)}</div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 18 L18 14 L34 16 L50 8 L68 4" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v2:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">💵 Ventas Contado</span>
+                <span class="kpi-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">💲</span>
+            </div>
+            <div class="kpi-value">{format_kpi_num(tot_contado)}</div>
+            <div class="kpi-subtext" style="color: #059669;">
+                <span>▲ {pct_contado:.1f}%</span>
+                <span style="color: #94a3b8; font-weight: 400;">({int(tot_ops_contado):,})</span>
+            </div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 20 L20 15 L36 17 L52 9 L68 5" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v3:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">📑 Ventas Crédito</span>
+                <span class="kpi-icon-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb;">📑</span>
+            </div>
+            <div class="kpi-value">{format_kpi_num(tot_credito)}</div>
+            <div class="kpi-subtext" style="color: #2563eb;">
+                <span>▲ {pct_credito:.1f}%</span>
+                <span style="color: #94a3b8; font-weight: 400;">({int(tot_ops_credito):,})</span>
+            </div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 12 L20 16 L38 10 L54 14 L68 8" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v4:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">Nº Operaciones</span>
+                <span class="kpi-icon-badge" style="background: rgba(139, 92, 246, 0.15); color: #7c3aed;">📊</span>
+            </div>
+            <div class="kpi-value">{int(tot_operaciones):,}</div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 19 L22 13 L38 15 L52 7 L68 3" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v5:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">Ticket Promedio</span>
+                <span class="kpi-icon-badge" style="background: rgba(249, 115, 22, 0.15); color: #ea580c;">🎟️</span>
+            </div>
+            <div class="kpi-value">${ticket_prom:.2f}</div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 16 L18 10 L36 14 L52 8 L68 12" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v6:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
+                <span class="kpi-title">Unidades Vendidas</span>
+                <span class="kpi-icon-badge" style="background: rgba(234, 179, 8, 0.15); color: #ca8a04;">🏆</span>
+            </div>
+            <div class="kpi-value">{int(tot_unidades):,}</div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 18 L20 12 L38 15 L54 6 L68 2" stroke="#eab308" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.write("")
 
     # Evolución Diaria de Ventas (Desglosando Contado y Crédito - Últimos 30 Días)
     st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito (Últimos 30 Días)")
@@ -1206,22 +1581,28 @@ with tab_ventas:
 
         fig_evol = go.Figure()
 
-        # Barra Contado
+        # Barra Contado (#10B981)
         fig_evol.add_trace(go.Bar(
             x=df_dia_agg["fecha"],
             y=df_dia_agg["ventas_contado"],
             name="💵 Venta Contado",
-            marker_color="#2ecc71",
+            marker=dict(
+                color="#10B981",
+                line=dict(color="#059669", width=1)
+            ),
             customdata=custom_info,
             hovertemplate="💵 <b>Contado:</b> $%{y:,.2f} (%{customdata[3]:,} ops)<extra></extra>"
         ))
 
-        # Barra Crédito
+        # Barra Crédito (#3B82F6)
         fig_evol.add_trace(go.Bar(
             x=df_dia_agg["fecha"],
             y=df_dia_agg["ventas_credito"],
             name="📑 Venta Crédito",
-            marker_color="#3498db",
+            marker=dict(
+                color="#3B82F6",
+                line=dict(color="#1E3A8A", width=1)
+            ),
             customdata=custom_info,
             hovertemplate="📑 <b>Crédito:</b> $%{y:,.2f} (%{customdata[5]:,} ops)<extra></extra>"
         ))
@@ -1243,9 +1624,21 @@ with tab_ventas:
             hovermode="x unified",
             xaxis_title="Fecha",
             yaxis_title="Monto Facturado ($)",
+            plot_bgcolor="#5a6876",
+            paper_bgcolor="#475564",
+            font=dict(color="#f1f5f9"),
+            margin=dict(l=40, r=20, t=50, b=40),
+            hoverlabel=dict(
+                bgcolor="rgba(15, 23, 42, 0.95)",
+                bordercolor="#0d9488",
+                font_size=13,
+                font_family="Inter, sans-serif"
+            ),
+            xaxis=dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)"),
+            yaxis=dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)"),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
-        st.plotly_chart(fig_evol, use_container_width=True)
+        st.plotly_chart(aplicar_estilo_farma(fig_evol), use_container_width=True)
 
         # --- Nueva Sección: Evolución Mes a Mes de Ventas, Ticket Promedio y Operaciones ---
         st.markdown("#### 📅 Evolución Mes a Mes: Facturación, Ticket Promedio y Operaciones")
@@ -1337,11 +1730,16 @@ with tab_ventas:
                     title="Tendencia Mensual: Facturación vs Ticket Promedio y Operaciones",
                     hovermode="x unified",
                     xaxis_title="Mes (Año-Mes)",
+                    plot_bgcolor="#5a6876",
+                    paper_bgcolor="#475564",
+                    font=dict(color="#f1f5f9"),
+                    margin=dict(l=40, r=40, t=50, b=40),
                     legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-                    yaxis=dict(title="Monto Facturado ($) / Operaciones"),
+                    xaxis=dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)"),
+                    yaxis=dict(title="Monto Facturado ($) / Operaciones", gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)"),
                     yaxis2=dict(title="Ticket Promedio ($)", overlaying="y", side="right", showgrid=False)
                 )
-                st.plotly_chart(fig_mes, use_container_width=True)
+                st.plotly_chart(aplicar_estilo_farma(fig_mes), use_container_width=True)
 
             with col_m_metr:
                 st.markdown("##### 📌 Desglose Mensual")
@@ -1407,15 +1805,22 @@ with tab_ventas:
                               "<b>Total Facturado:</b> $%{customdata[2]:,.2f}<br>" +
                               "<b>Unidades Vendidas:</b> %{customdata[1]:,}<extra></extra>"
             )
-            fig_p.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_p, use_container_width=True)
+            fig_p.update_layout(
+                yaxis={'categoryorder':'total ascending'},
+                plot_bgcolor="#5a6876",
+                paper_bgcolor="#475564",
+                font=dict(color="#f1f5f9"),
+                margin=dict(l=40, r=20, t=30, b=40),
+                xaxis=dict(gridcolor="rgba(255, 255, 255, 0.08)", linecolor="rgba(255, 255, 255, 0.15)")
+            )
+            st.plotly_chart(aplicar_estilo_farma(fig_p), use_container_width=True)
         else:
             st.info("Sin registros de productos.")
 
     with col_lab:
         col_t_l_sub1, col_t_l_sub2 = st.tabs(["🧪 Laboratorios", "🌿 Sublíneas"])
         with col_t_l_sub1:
-            st.markdown("#### Participación de Laboratorios (Top 10 + Otros)")
+            st.markdown("#### Participación de Laboratorios (3D Interactive Donut)")
             if not df_v_prod.empty:
                 df_lab_agg = df_v_prod.groupby("nombre_laboratorio").agg(
                     total_venta_monto=("total_venta_monto", "sum"),
@@ -1433,20 +1838,106 @@ with tab_ventas:
                     }])
                     df_lab_agg = pd.concat([top10_labs, fila_otros], ignore_index=True)
 
-                fig_l = px.pie(
-                    df_lab_agg, 
-                    names="nombre_laboratorio", 
-                    values="total_venta_monto", 
-                    hole=0.4,
-                    custom_data=["unidades_vendidas"]
-                )
-                fig_l.update_traces(
-                    hovertemplate="<b>Laboratorio:</b> %{label}<br>" +
-                                  "<b>Venta Total:</b> $%{value:,.2f}<br>" +
-                                  "<b>Participación:</b> %{percent}<br>" +
-                                  "<b>Unidades Vendidas:</b> %{customdata[0]:,}<extra></extra>"
-                )
-                st.plotly_chart(fig_l, use_container_width=True)
+                # Preparar datos JSON para Highcharts 3D Donut
+                total_monto_labs = df_lab_agg["total_venta_monto"].sum()
+                colores_3d = ["#38bdf8", "#fb7185", "#34d399", "#fb923c", "#a78bfa", "#facc15", "#818cf8", "#f43f5e", "#2dd4bf", "#c084fc", "#94a3b8"]
+                
+                datos_3d_json = []
+                for idx, r_lab in df_lab_agg.iterrows():
+                    pct = (r_lab["total_venta_monto"] / total_monto_labs * 100) if total_monto_labs > 0 else 0
+                    color_item = colores_3d[idx % len(colores_3d)]
+                    datos_3d_json.append({
+                        "name": r_lab["nombre_laboratorio"],
+                        "y": round(float(r_lab["total_venta_monto"]), 2),
+                        "color": color_item,
+                        "pct": f"{pct:.1f}%",
+                        "uds": int(r_lab["unidades_vendidas"])
+                    })
+
+                html_highcharts_3d = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <script src="https://code.highcharts.com/highcharts.js"></script>
+                    <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+                    <style>
+                        body {{
+                            background: linear-gradient(135deg, #475564 0%, #5a6876 100%);
+                            border-radius: 14px;
+                            margin: 0;
+                            padding: 0;
+                            font-family: 'Inter', sans-serif;
+                            overflow: hidden;
+                        }}
+                        #container3d {{
+                            width: 100%;
+                            height: 380px;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div id="container3d"></div>
+                    <script>
+                        Highcharts.chart('container3d', {{
+                            chart: {{
+                                type: 'pie',
+                                backgroundColor: 'transparent',
+                                options3d: {{
+                                    enabled: true,
+                                    alpha: 58,
+                                    beta: 0,
+                                    depth: 42
+                                }}
+                            }},
+                            title: {{
+                                text: null
+                            }},
+                            tooltip: {{
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                borderColor: '#38bdf8',
+                                borderRadius: 10,
+                                style: {{
+                                    color: '#f8fafc',
+                                    fontSize: '13px'
+                                }},
+                                formatter: function () {{
+                                    return '<b>' + this.point.name + '</b><br/>' +
+                                           'Venta Total: <b>$' + Highcharts.numberFormat(this.y, 2) + '</b><br/>' +
+                                           'Participación: <b>' + this.point.pct + '</b><br/>' +
+                                           'Unidades: <b>' + Highcharts.numberFormat(this.point.uds, 0) + ' uds</b>';
+                                }}
+                            }},
+                            plotOptions: {{
+                                pie: {{
+                                    innerSize: '55%',
+                                    depth: 42,
+                                    allowPointSelect: true,
+                                    cursor: 'pointer',
+                                    dataLabels: {{
+                                        enabled: true,
+                                        format: '<span style="color:#e2e8f0; font-weight:600;">{{point.name}}</span>: {{point.pct}}',
+                                        connectorColor: 'rgba(255,255,255,0.2)',
+                                        style: {{
+                                            textOutline: 'none',
+                                            fontSize: '11px'
+                                        }}
+                                    }}
+                                }}
+                            }},
+                            series: [{{
+                                name: 'Ventas',
+                                data: {json.dumps(datos_3d_json)}
+                            }}],
+                            credits: {{
+                                enabled: false
+                            }}
+                        }});
+                    </script>
+                </body>
+                </html>
+                """
+                components.html(html_highcharts_3d, height=390)
             else:
                 st.info("Sin registros de laboratorio.")
 
@@ -1472,7 +1963,7 @@ with tab_ventas:
                                   "<b>Participación:</b> %{percent}<br>" +
                                   "<b>Unidades Vendidas:</b> %{customdata[0]:,}<extra></extra>"
                 )
-                st.plotly_chart(fig_subl_v, use_container_width=True)
+                st.plotly_chart(aplicar_estilo_farma(fig_subl_v), use_container_width=True)
             else:
                 st.info("Sin registros de sublínea.")
 
@@ -1519,7 +2010,7 @@ with tab_ventas:
                 hovertemplate="<b>%{y}</b> [%{customdata[0]}]<br><b>Facturación:</b> $%{x:,.2f}<br><b>Unidades:</b> %{customdata[1]:,} uds<br><b>Artículos Activos:</b> %{customdata[2]}<extra></extra>"
             )
             fig_vsuc.update_layout(yaxis={'categoryorder':'total ascending'}, height=340)
-            st.plotly_chart(fig_vsuc, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_vsuc), use_container_width=True)
 
         with col_t_vsuc:
             tot_gral_v = df_suc_v_agg["total_facturado"].sum()
@@ -1665,6 +2156,7 @@ with tab_ventas:
         st.dataframe(
             df_tabla_prod_suc,
             use_container_width=True,
+            height=420,
             column_config={
                 "codigo_sucursal": "Cód. Sucursal",
                 "nombre_sucursal": "Sucursal / Farmacia",
@@ -1676,6 +2168,57 @@ with tab_ventas:
                 "total_venta_monto": st.column_config.NumberColumn("Total Facturado ($)", format="$%.2f")
             }
         )
+
+        # Resumen Visual con Badges de Laboratorios (Muestra destacada Top 10)
+        with st.expander("✨ Vista Rápida Estilizada con Badges de Laboratorio", expanded=False):
+            def badge_lab_html(nombre_lab):
+                n_lower = str(nombre_lab).lower()
+                if "pfizer" in n_lower:
+                    cls = "badge-pfizer"
+                elif "novartis" in n_lower:
+                    cls = "badge-novartis"
+                elif "leti" in n_lower:
+                    cls = "badge-leti"
+                elif "calox" in n_lower:
+                    cls = "badge-calox"
+                else:
+                    cls = "badge-other"
+                return f'<span class="badge-lab {cls}">{nombre_lab}</span>'
+
+            filas_html = ""
+            for _, r_b in df_tabla_prod_suc.head(15).iterrows():
+                b_html = badge_lab_html(r_b["nombre_laboratorio"])
+                filas_html += f"""
+                <tr class="table-glass-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
+                    <td style="padding: 10px 14px; font-weight: 600; color: #38bdf8;">[{r_b['codigo_sucursal']}] {r_b['nombre_sucursal']}</td>
+                    <td style="padding: 10px 14px; color: #94a3b8; font-family: monospace;">{r_b['codigo_articulo']}</td>
+                    <td style="padding: 10px 14px; color: #f1f5f9; font-weight: 500;">{r_b['nombre_producto']}</td>
+                    <td style="padding: 10px 14px;">{b_html}</td>
+                    <td style="padding: 10px 14px; text-align: right; color: #e2e8f0;">{int(r_b['unidades_vendidas']):,}</td>
+                    <td style="padding: 10px 14px; text-align: right; color: #34d399; font-weight: 600;">${r_b['total_venta_monto']:,.2f}</td>
+                </tr>
+                """
+
+            tabla_estilizada = f"""
+            <div style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                    <thead>
+                        <tr style="background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8;">
+                            <th style="padding: 10px 14px; text-align: left;">Sucursal</th>
+                            <th style="padding: 10px 14px; text-align: left;">Cód. Artículo</th>
+                            <th style="padding: 10px 14px; text-align: left;">Producto</th>
+                            <th style="padding: 10px 14px; text-align: left;">Laboratorio</th>
+                            <th style="padding: 10px 14px; text-align: right;">Unidades</th>
+                            <th style="padding: 10px 14px; text-align: right;">Total Facturado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filas_html}
+                    </tbody>
+                </table>
+            </div>
+            """
+            st.markdown(tabla_estilizada, unsafe_allow_html=True)
     else:
         st.info("Sin registros de productos por sucursal para este período.")
 
@@ -1782,7 +2325,7 @@ with tab_compras:
                 yaxis_title="Monto Inversión ($)",
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
-            st.plotly_chart(fig_cf, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_cf), use_container_width=True)
         else:
             st.info("Sin compras registradas para estos filtros.")
 
@@ -1835,7 +2378,7 @@ with tab_compras:
                               "<b>Unidades Compradas:</b> %{customdata[1]:,}<extra></extra>"
             )
             fig_tprv.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_tprv, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_tprv), use_container_width=True)
         else:
             st.info("Sin datos para tipos de proveedor.")
 
@@ -1885,7 +2428,7 @@ with tab_compras:
                               "<b>Unidades Compradas:</b> %{customdata[1]:,}<extra></extra>"
             )
             fig_seg.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_seg, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_seg), use_container_width=True)
         else:
             st.info("Sin datos para segmentos de proveedor.")
 
@@ -1934,7 +2477,7 @@ with tab_compras:
                               "<b>Unidades Adquiridas:</b> %{customdata[1]:,}<extra></extra>"
             )
             fig_cp.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_cp, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_cp), use_container_width=True)
         else:
             st.info("Sin datos de proveedores.")
 
@@ -2004,7 +2547,7 @@ with tab_compras:
                               "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
             )
             fig_clab.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_clab, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_clab), use_container_width=True)
         else:
             st.info("Sin compras por laboratorio.")
 
@@ -2024,7 +2567,7 @@ with tab_compras:
                               "<b>Participación:</b> %{percent}<br>" +
                               "<b>Unidades Compradas:</b> %{customdata[0]:,}<extra></extra>"
             )
-            st.plotly_chart(fig_clab_pie, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_clab_pie), use_container_width=True)
         else:
             st.info("Sin datos para distribución de laboratorios.")
 
@@ -2080,7 +2623,7 @@ with tab_compras:
                 ),
                 margin=dict(t=20, b=80)
             )
-            st.plotly_chart(fig_mes_lab, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_mes_lab), use_container_width=True)
 
         with col_cmes_prv:
             st.markdown("##### 🚚 Compras Mensuales por Proveedor / Droguería ($) [Top 10 + Otros]")
@@ -2126,7 +2669,7 @@ with tab_compras:
                 ),
                 margin=dict(t=20, b=80)
             )
-            st.plotly_chart(fig_mes_prv, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_mes_prv), use_container_width=True)
     else:
         st.info("Sin registros de compras para la evolución mensual.")
 
@@ -2333,7 +2876,7 @@ with tab_compras:
                 hovertemplate="<b>%{y}</b><br><b>Inversión:</b> $%{x:,.2f}<extra></extra>"
             )
             fig_csuc.update_layout(yaxis={'categoryorder':'total ascending'}, height=340)
-            st.plotly_chart(fig_csuc, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_csuc), use_container_width=True)
 
         with col_t_csuc:
             tot_gral_c = df_suc_c_agg["total_comprado"].sum()
@@ -2467,7 +3010,7 @@ with tab_inventario:
                 yaxis2=dict(title="Unidades en Stock", overlaying="y", side="right", showgrid=False),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
-            st.plotly_chart(fig_imes, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_imes), use_container_width=True)
 
         with col_t_imes:
             st.markdown("##### 📋 Cierres Mensuales de Inventario")
@@ -2509,7 +3052,7 @@ with tab_inventario:
                 color_continuous_scale="Blues"
             )
             fig_vlab.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_vlab, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_vlab), use_container_width=True)
         else:
             st.info("Sin registros de inventario.")
 
@@ -2528,7 +3071,7 @@ with tab_inventario:
                 hole=0.4,
                 title="Capital por Línea"
             )
-            st.plotly_chart(fig_vlin, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_vlin), use_container_width=True)
         else:
             st.info("Sin registros de líneas.")
 
@@ -2548,7 +3091,7 @@ with tab_inventario:
                 title="Capital por Sublínea",
                 color_discrete_sequence=px.colors.qualitative.Prism
             )
-            st.plotly_chart(fig_vsubl, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_vsubl), use_container_width=True)
         else:
             st.info("Sin registros de sublíneas.")
 
@@ -2610,7 +3153,7 @@ with tab_inventario:
                 height=340,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
-            st.plotly_chart(fig_isuc, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_isuc), use_container_width=True)
 
         with col_t_isuc:
             tot_gral_inv = df_suc_inv_agg["valor_costo"].sum()
@@ -2882,7 +3425,7 @@ with tab_inventario:
                                       "<b>Stock Disponible:</b> %{customdata[1]} uds<extra></extra>"
                     )
                     fig_comp_p.update_layout(yaxis={'categoryorder':'total ascending'})
-                    st.plotly_chart(fig_comp_p, use_container_width=True)
+                    st.plotly_chart(aplicar_estilo_farma(fig_comp_p), use_container_width=True)
 
                 with col_t_comp:
                     st.markdown("##### Desglose por Farmacia")
@@ -2948,7 +3491,7 @@ with tab_vendedores:
                 color_continuous_scale="Purples"
             )
             fig_v.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_v, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_v), use_container_width=True)
 
         with col_v2:
             st.markdown("#### Desglose de Productividad")
@@ -3022,7 +3565,7 @@ with tab_finanzas:
     if not df_pagos.empty:
         df_p_agg = df_pagos.groupby("forma_pago")["total_ingresado"].sum().reset_index()
         fig_p = px.pie(df_p_agg, names="forma_pago", values="total_ingresado", hole=0.45, title="Distribución de Métodos de Pago")
-        st.plotly_chart(fig_p, use_container_width=True)
+        st.plotly_chart(aplicar_estilo_farma(fig_p), use_container_width=True)
     else:
         st.info("Sin registros de formas de pago.")
 
@@ -3334,7 +3877,7 @@ with tab_sugerencias:
                 color_continuous_scale="Teal"
             )
             fig_bar_cmp.update_layout(yaxis={'categoryorder':'total ascending'}, height=300)
-            st.plotly_chart(fig_bar_cmp, use_container_width=True)
+            st.plotly_chart(aplicar_estilo_farma(fig_bar_cmp), use_container_width=True)
 
     st.divider()
 
