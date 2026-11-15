@@ -23,7 +23,17 @@ CREATE TABLE IF NOT EXISTS maestro_lineas (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 3. TABLA MAESTRA: LABORATORIOS / FABRICANTES
+-- 3. TABLA MAESTRA: SUBLÍNEAS DE PRODUCTOS
+CREATE TABLE IF NOT EXISTS maestro_sublineas (
+    id_sublinea INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_sublinea VARCHAR(6) NOT NULL UNIQUE,          -- Código de sublínea de 6 caracteres (Ej: SL001)
+    descripcion_sublinea VARCHAR(100) NOT NULL,          -- Descripción de la sublínea
+    id_linea INT NULL,                                   -- Opcional enlace a la línea padre
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_linea) REFERENCES maestro_lineas(id_linea) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+-- 4. TABLA MAESTRA: LABORATORIOS / FABRICANTES
 CREATE TABLE IF NOT EXISTS maestro_laboratorios (
     id_laboratorio INT AUTO_INCREMENT PRIMARY KEY,
     codigo_laboratorio VARCHAR(6) NOT NULL UNIQUE, -- Código de laboratorio de 6 caracteres (Ej: LAB001, PFIZER)
@@ -31,17 +41,39 @@ CREATE TABLE IF NOT EXISTS maestro_laboratorios (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 4. TABLA MAESTRA: PROVEEDORES / DROGUERÍAS / DISTRIBUIDORES
+-- 4. TABLA MAESTRA: TIPOS DE PROVEEDOR
+CREATE TABLE IF NOT EXISTS maestro_tipos_proveedor (
+    id_tipo_proveedor INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_tipo_proveedor VARCHAR(6) NOT NULL UNIQUE,  -- Código alfanumérico de 6 caracteres (Ej: DROGUE, DISTRI, FABRIC, IMPORT, SERVIC)
+    descripcion VARCHAR(100) NOT NULL,                 -- Descripción detallada
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 5. TABLA MAESTRA: SEGMENTOS DE PROVEEDOR
+CREATE TABLE IF NOT EXISTS maestro_segmentos_proveedor (
+    id_segmento INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_segmento VARCHAR(6) NOT NULL UNIQUE,        -- Código alfanumérico de 6 caracteres (Ej: MEDICA, MISCEL, EQUIPO, ALIMEN, GENERI)
+    descripcion VARCHAR(100) NOT NULL,                 -- Descripción detallada
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 6. TABLA MAESTRA: PROVEEDORES / DROGUERÍAS / DISTRIBUIDORES
 CREATE TABLE IF NOT EXISTS maestro_proveedores (
     id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
     codigo_proveedor VARCHAR(10) NOT NULL UNIQUE,  -- Código de proveedor de 10 caracteres (Ej: PRV0000001, COBECA0001)
     nombre_proveedor VARCHAR(150) NOT NULL,        -- Ej: Droguería Cobeca, Droguería Nena, Drolanca
     rif_proveedor VARCHAR(20),                     -- Ej: J-12345678-0
+    tipo_proveedor VARCHAR(6) DEFAULT 'DROGUE',    -- Clave foránea al tipo de proveedor
+    segmento VARCHAR(6) DEFAULT 'MEDICA',          -- Clave foránea al segmento de proveedor
     telefono VARCHAR(30),
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tipo_proveedor) REFERENCES maestro_tipos_proveedor(codigo_tipo_proveedor)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (segmento) REFERENCES maestro_segmentos_proveedor(codigo_segmento)
+        ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- 5. TABLA MAESTRA: CLIENTES (Particulares, Seguros y Convenios Corporativos)
+-- 7. TABLA MAESTRA: CLIENTES (Particulares, Seguros y Convenios Corporativos)
 CREATE TABLE IF NOT EXISTS maestro_clientes (
     id_cliente INT AUTO_INCREMENT PRIMARY KEY,
     codigo_cliente VARCHAR(10) NOT NULL UNIQUE,    -- Código de cliente de 10 caracteres (Ej: CTE0000001, CLI0000045)
@@ -53,18 +85,21 @@ CREATE TABLE IF NOT EXISTS maestro_clientes (
     INDEX idx_cte_tipo (tipo_cliente)
 );
 
--- 6. TABLA MAESTRA: PRODUCTOS (Normalizada con enlace a Líneas y Laboratorios)
+-- 8. TABLA MAESTRA: PRODUCTOS (Normalizada con enlace a Líneas, Sublíneas y Laboratorios)
 CREATE TABLE IF NOT EXISTS maestro_productos (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
     codigo_articulo VARCHAR(30) NOT NULL UNIQUE,  -- Código interno de artículo de hasta 30 caracteres
     codigo_barras VARCHAR(50),                    -- Código de barras comercial (flexible, sin longitud mínima)
     nombre_producto VARCHAR(150) NOT NULL,        -- Descripción del producto
     id_linea INT NOT NULL,                        -- Enlace al maestro de líneas
+    id_sublinea INT NULL DEFAULT 1,               -- Enlace al maestro de sublíneas
     id_laboratorio INT NOT NULL,                  -- Enlace al maestro de laboratorios
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_linea) REFERENCES maestro_lineas(id_linea),
+    FOREIGN KEY (id_sublinea) REFERENCES maestro_sublineas(id_sublinea),
     FOREIGN KEY (id_laboratorio) REFERENCES maestro_laboratorios(id_laboratorio),
     INDEX idx_prod_linea (id_linea),
+    INDEX idx_prod_sublinea (id_sublinea),
     INDEX idx_prod_lab (id_laboratorio),
     INDEX idx_prod_barras (codigo_barras)
 );
