@@ -162,44 +162,72 @@ def generar_datos_prueba():
     ]
     df_labs = pd.DataFrame(laboratorios)
 
-    # 4. Maestro Tipos de Proveedor
+    # 4. Maestro Tipos de Proveedor Oficial MIVO 7.1 (Naturaleza Principal)
     tipos_proveedor = [
-        {"id_tipo_proveedor": 1, "codigo_tipo_proveedor": "DROGUE", "descripcion": "Droguerías y Distribución Farmacéutica"},
-        {"id_tipo_proveedor": 2, "codigo_tipo_proveedor": "DISTRI", "descripcion": "Distribuidoras Comerciales"},
-        {"id_tipo_proveedor": 3, "codigo_tipo_proveedor": "FABRIC", "descripcion": "Laboratorios y Fabricantes Directos"},
-        {"id_tipo_proveedor": 4, "codigo_tipo_proveedor": "IMPORT", "descripcion": "Importadores y Representantes"},
-        {"id_tipo_proveedor": 5, "codigo_tipo_proveedor": "SERVIC", "descripcion": "Proveedores de Servicios y Suministros"}
+        {"id_tipo_proveedor": 1, "codigo_tipo_proveedor": "01", "descripcion": "Mercancía"},
+        {"id_tipo_proveedor": 2, "codigo_tipo_proveedor": "02", "descripcion": "Servicios"},
+        {"id_tipo_proveedor": 3, "codigo_tipo_proveedor": "03", "descripcion": "Activos y Equipos"},
+        {"id_tipo_proveedor": 4, "codigo_tipo_proveedor": "04", "descripcion": "Tecnología"},
+        {"id_tipo_proveedor": 5, "codigo_tipo_proveedor": "05", "descripcion": "Logística y Transporte"},
+        {"id_tipo_proveedor": 6, "codigo_tipo_proveedor": "06", "descripcion": "Servicios Profesionales"},
+        {"id_tipo_proveedor": 7, "codigo_tipo_proveedor": "07", "descripcion": "Servicios Públicos"},
+        {"id_tipo_proveedor": 8, "codigo_tipo_proveedor": "08", "descripcion": "Arrendamiento"},
+        {"id_tipo_proveedor": 9, "codigo_tipo_proveedor": "09", "descripcion": "Seguros"},
+        {"id_tipo_proveedor": 10, "codigo_tipo_proveedor": "10", "descripcion": "Telecomunicaciones"},
+        {"id_tipo_proveedor": 99, "codigo_tipo_proveedor": "99", "descripcion": "Otros Proveedores"}
     ]
     df_tipos_prov = pd.DataFrame(tipos_proveedor)
 
-    # 5. Maestro Segmentos de Proveedor
+    # 5. Maestro Segmentos de Proveedor Oficial MIVO 7.1 (Especialización Comercial)
     segmentos_proveedor = [
-        {"id_segmento": 1, "codigo_segmento": "MEDICA", "descripcion": "Medicamentos y Especialidades Farmacéuticas"},
-        {"id_segmento": 2, "codigo_segmento": "MISCEL", "descripcion": "Misceláneos y Cuidado Personal"},
-        {"id_segmento": 3, "codigo_segmento": "EQUIPO", "descripcion": "Equipos e Insumos Médicos"},
-        {"id_segmento": 4, "codigo_segmento": "ALIMEN", "descripcion": "Alimentos, Bebidas y Nutrición"},
-        {"id_segmento": 5, "codigo_segmento": "GENERI", "descripcion": "Segmento General"}
+        # Comercialización y Distribución
+        {"id_segmento": 1, "codigo_segmento": "P0101", "descripcion": "Droguerías Estratégicas"},
+        {"id_segmento": 2, "codigo_segmento": "P0102", "descripcion": "Droguerías Habituales"},
+        {"id_segmento": 3, "codigo_segmento": "P0103", "descripcion": "Droguerías Ocasionales"},
+        {"id_segmento": 4, "codigo_segmento": "P0104", "descripcion": "Laboratorios Farmacéuticos"},
+        {"id_segmento": 5, "codigo_segmento": "P0105", "descripcion": "Farmacia Intercompañía"},
+        {"id_segmento": 6, "codigo_segmento": "P0106", "descripcion": "Otros Distribuidores de Mercancía"},
+        # Insumos, Bienes y Mantenimiento
+        {"id_segmento": 7, "codigo_segmento": "P0107", "descripcion": "Alimentos y Bebidas"},
+        {"id_segmento": 8, "codigo_segmento": "P0108", "descripcion": "Higiene y Cuidado Personal"},
+        {"id_segmento": 9, "codigo_segmento": "P0109", "descripcion": "Productos de Limpieza"},
+        {"id_segmento": 10, "codigo_segmento": "P0110", "descripcion": "Material Médico y Sanitario"},
+        {"id_segmento": 11, "codigo_segmento": "P0111", "descripcion": "Papelería y Suministros"},
+        {"id_segmento": 12, "codigo_segmento": "P0201", "descripcion": "Mantenimiento"},
+        {"id_segmento": 13, "codigo_segmento": "P0202", "descripcion": "Limpieza"},
+        {"id_segmento": 14, "codigo_segmento": "P0203", "descripcion": "Vigilancia y Seguridad"},
+        # Corporativo, Servicios y Tecnología
+        {"id_segmento": 15, "codigo_segmento": "P0204", "descripcion": "Reparaciones"},
+        {"id_segmento": 16, "codigo_segmento": "P0205", "descripcion": "Servicios Generales"},
+        {"id_segmento": 17, "codigo_segmento": "P0301", "descripcion": "Equipos Computación"},
+        {"id_segmento": 18, "codigo_segmento": "P0401", "descripcion": "Software y Licencias"},
+        {"id_segmento": 19, "codigo_segmento": "P0501", "descripcion": "Transporte Mercancías"},
+        {"id_segmento": 20, "codigo_segmento": "P0601", "descripcion": "Contabilidad / Auditoría"},
+        {"id_segmento": 21, "codigo_segmento": "P0801", "descripcion": "Alquiler Locales"},
+        {"id_segmento": 99, "codigo_segmento": "P9999", "descripcion": "Otros Proveedores"}
     ]
     df_segmentos_prov = pd.DataFrame(segmentos_proveedor)
 
     # 6. Maestro Proveedores (Código correlativo de 6 dígitos según estándar MIVO 7.1)
     proveedores = [
-        {"id_proveedor": 1, "codigo_proveedor": "000001", "nombre_proveedor": "Droguería Cobeca", "rif_proveedor": "J-00012345-1", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
-        {"id_proveedor": 2, "codigo_proveedor": "000002", "nombre_proveedor": "Droguería Nena", "rif_proveedor": "J-00045678-2", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
-        {"id_proveedor": 3, "codigo_proveedor": "000003", "nombre_proveedor": "Drolanca", "rif_proveedor": "J-00089123-3", "tipo_proveedor": "DROGUE", "segmento": "MISCEL"},
-        {"id_proveedor": 4, "codigo_proveedor": "000004", "nombre_proveedor": "Grupo Farvenca", "rif_proveedor": "J-00078945-4", "tipo_proveedor": "DISTRI", "segmento": "EQUIPO"},
-        {"id_proveedor": 5, "codigo_proveedor": "000005", "nombre_proveedor": "Droguería Vitalis", "rif_proveedor": "J-00032165-5", "tipo_proveedor": "FABRIC", "segmento": "MEDICA"}
+        {"id_proveedor": 1, "codigo_proveedor": "000001", "nombre_proveedor": "Droguería Cobeca", "rif_proveedor": "J-00012345-1", "tipo_proveedor": "01", "segmento": "P0101"},
+        {"id_proveedor": 2, "codigo_proveedor": "000002", "nombre_proveedor": "Droguería Nena", "rif_proveedor": "J-00045678-2", "tipo_proveedor": "01", "segmento": "P0101"},
+        {"id_proveedor": 3, "codigo_proveedor": "000003", "nombre_proveedor": "Drolanca", "rif_proveedor": "J-00089123-3", "tipo_proveedor": "01", "segmento": "P0102"},
+        {"id_proveedor": 4, "codigo_proveedor": "000004", "nombre_proveedor": "Grupo Farvenca", "rif_proveedor": "J-00078945-4", "tipo_proveedor": "01", "segmento": "P0102"},
+        {"id_proveedor": 5, "codigo_proveedor": "000005", "nombre_proveedor": "Laboratorios Leti Directo", "rif_proveedor": "J-00032165-5", "tipo_proveedor": "01", "segmento": "P0104"},
+        {"id_proveedor": 6, "codigo_proveedor": "000006", "nombre_proveedor": "Mervis Technology C.A. (MIVO)", "rif_proveedor": "J-40981234-9", "tipo_proveedor": "04", "segmento": "P0401"},
+        {"id_proveedor": 7, "codigo_proveedor": "000007", "nombre_proveedor": "Transfarma Logística Express", "rif_proveedor": "J-31456789-2", "tipo_proveedor": "05", "segmento": "P0501"}
     ]
     df_provs = pd.DataFrame(proveedores)
 
-    # 7. Maestro Clientes (Cédula de 10 dígitos o RIF según estándar MIVO 7.1)
+    # 7. Maestro Clientes (Cédula de 10 dígitos o RIF, Tipos A01/A02 y Segmentos C01-C05 según MIVO 7.1)
     clientes = [
-        {"id_cliente": 1, "codigo_cliente": "0014238901", "nombre_cliente": "Roberto Méndez", "tipo_cliente": "Particular", "identificacion": "V-14238901"},
-        {"id_cliente": 2, "codigo_cliente": "0018765432", "nombre_cliente": "Elena Salazar", "tipo_cliente": "Particular", "identificacion": "V-18765432"},
-        {"id_cliente": 3, "codigo_cliente": "J304918231", "nombre_cliente": "Seguros Caracas", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-30491823-1"},
-        {"id_cliente": 4, "codigo_cliente": "J000123450", "nombre_cliente": "Mercantil Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-00012345-0"},
-        {"id_cliente": 5, "codigo_cliente": "J000456789", "nombre_cliente": "Empresas Polar (Convenio)", "tipo_cliente": "Convenio", "identificacion": "J-00045678-9"},
-        {"id_cliente": 6, "codigo_cliente": "J298371923", "nombre_cliente": "Banesco Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-29837192-3"}
+        {"id_cliente": 1, "codigo_cliente": "0014238901", "nombre_cliente": "Roberto Méndez", "tipo_cliente": "A01", "segmento_cliente": "C01", "identificacion": "V-14238901"},
+        {"id_cliente": 2, "codigo_cliente": "0018765432", "nombre_cliente": "Elena Salazar", "tipo_cliente": "A01", "segmento_cliente": "C01", "identificacion": "V-18765432"},
+        {"id_cliente": 3, "codigo_cliente": "J304918231", "nombre_cliente": "Seguros Caracas", "tipo_cliente": "A02", "segmento_cliente": "C02", "identificacion": "J-30491823-1"},
+        {"id_cliente": 4, "codigo_cliente": "J000123450", "nombre_cliente": "Mercantil Seguros", "tipo_cliente": "A02", "segmento_cliente": "C02", "identificacion": "J-00012345-0"},
+        {"id_cliente": 5, "codigo_cliente": "J000456789", "nombre_cliente": "Empresas Polar (Convenio)", "tipo_cliente": "A02", "segmento_cliente": "C04", "identificacion": "J-00045678-9"},
+        {"id_cliente": 6, "codigo_cliente": "0025987654", "nombre_cliente": "Carlos Martínez (Empleado)", "tipo_cliente": "A01", "segmento_cliente": "C05", "identificacion": "V-25987654"}
     ]
     df_clientes = pd.DataFrame(clientes)
 
@@ -1450,6 +1478,68 @@ with tab_ventas:
 
     st.divider()
 
+    # --- COMPARATIVA DE VENTAS ENTRE SUCURSALES ---
+    st.markdown("#### 🏢 Comparativa de Rendimiento Comercial entre Sucursales")
+    if not df_v_prod.empty:
+        df_v_suc_comp = df_v_prod.copy()
+        if "codigo_sucursal" not in df_v_suc_comp.columns or "nombre_sucursal" not in df_v_suc_comp.columns:
+            cols_merge_s = [c for c in ["id_sucursal", "codigo_sucursal", "nombre"] if c in df_sucursales.columns]
+            df_v_suc_comp = df_v_suc_comp.merge(
+                df_sucursales[cols_merge_s].rename(columns={"nombre": "nombre_sucursal"}),
+                on="id_sucursal",
+                how="left"
+            )
+        if "nombre_sucursal" not in df_v_suc_comp.columns and "nombre" in df_v_suc_comp.columns:
+            df_v_suc_comp["nombre_sucursal"] = df_v_suc_comp["nombre"]
+
+        cols_grp_vsuc = [c for c in ["codigo_sucursal", "nombre_sucursal"] if c in df_v_suc_comp.columns]
+        if not cols_grp_vsuc:
+            cols_grp_vsuc = ["id_sucursal"]
+
+        df_suc_v_agg = df_v_suc_comp.groupby(cols_grp_vsuc).agg(
+            total_facturado=("total_venta_monto", "sum"),
+            unidades_vendidas=("unidades_vendidas", "sum"),
+            variedad_articulos=("id_producto", "nunique")
+        ).reset_index().sort_values("total_facturado", ascending=False)
+
+        col_g_vsuc, col_t_vsuc = st.columns([3, 2])
+        with col_g_vsuc:
+            fig_vsuc = px.bar(
+                df_suc_v_agg,
+                x="total_facturado",
+                y="nombre_sucursal",
+                orientation="h",
+                labels={"total_facturado": "Facturación Total ($)", "nombre_sucursal": "Sucursal"},
+                title="Ventas Totales por Farmacia ($)",
+                color="total_facturado",
+                color_continuous_scale="Teal",
+                custom_data=["codigo_sucursal", "unidades_vendidas", "variedad_articulos"]
+            )
+            fig_vsuc.update_traces(
+                hovertemplate="<b>%{y}</b> [%{customdata[0]}]<br><b>Facturación:</b> $%{x:,.2f}<br><b>Unidades:</b> %{customdata[1]:,} uds<br><b>Artículos Activos:</b> %{customdata[2]}<extra></extra>"
+            )
+            fig_vsuc.update_layout(yaxis={'categoryorder':'total ascending'}, height=340)
+            st.plotly_chart(fig_vsuc, use_container_width=True)
+
+        with col_t_vsuc:
+            tot_gral_v = df_suc_v_agg["total_facturado"].sum()
+            df_suc_v_agg["participacion"] = (df_suc_v_agg["total_facturado"] / tot_gral_v * 100) if tot_gral_v > 0 else 0
+            st.markdown("##### 📌 Ranking de Sucursales")
+            st.dataframe(
+                df_suc_v_agg[["codigo_sucursal", "nombre_sucursal", "total_facturado", "unidades_vendidas", "participacion"]],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "codigo_sucursal": "Cód.",
+                    "nombre_sucursal": "Farmacia",
+                    "total_facturado": st.column_config.NumberColumn("Ventas ($)", format="$%.2f"),
+                    "unidades_vendidas": st.column_config.NumberColumn("Unidades", format="%d"),
+                    "participacion": st.column_config.NumberColumn("% Part.", format="%.1f%%")
+                }
+            )
+
+    st.divider()
+
     # Tabla Resumen de Ventas por Laboratorio
     st.markdown("#### 🧪 Resumen de Ventas por Laboratorio")
     if not df_v_prod.empty:
@@ -2200,6 +2290,71 @@ with tab_compras:
 
     st.divider()
 
+    # --- COMPARATIVA DE COMPRAS ENTRE SUCURSALES ---
+    st.markdown("#### 🏢 Comparativa de Compras y Abastecimiento entre Sucursales")
+    if not df_comp.empty:
+        df_comp_suc = df_comp.copy()
+        if "codigo_sucursal" not in df_comp_suc.columns or "nombre_sucursal" not in df_comp_suc.columns:
+            cols_merge_cs = [c for c in ["id_sucursal", "codigo_sucursal", "nombre"] if c in df_sucursales.columns]
+            df_comp_suc = df_comp_suc.merge(
+                df_sucursales[cols_merge_cs].rename(columns={"nombre": "nombre_sucursal"}),
+                on="id_sucursal",
+                how="left"
+            )
+        if "nombre_sucursal" not in df_comp_suc.columns and "nombre" in df_comp_suc.columns:
+            df_comp_suc["nombre_sucursal"] = df_comp_suc["nombre"]
+
+        cols_grp_csuc = [c for c in ["codigo_sucursal", "nombre_sucursal"] if c in df_comp_suc.columns]
+        if not cols_grp_csuc:
+            cols_grp_csuc = ["id_sucursal"]
+
+        df_suc_c_agg = df_comp_suc.groupby(cols_grp_csuc).agg(
+            total_comprado=("total_compra_monto", "sum"),
+            unidades_compradas=("unidades_compradas", "sum"),
+            droguerias_activas=("id_proveedor", "nunique")
+        ).reset_index().sort_values("total_comprado", ascending=False)
+
+        col_g_csuc, col_t_csuc = st.columns([3, 2])
+        with col_g_csuc:
+            y_col_c = "nombre_sucursal" if "nombre_sucursal" in df_suc_c_agg.columns else cols_grp_csuc[0]
+            custom_c = [c for c in ["codigo_sucursal", "unidades_compradas", "droguerias_activas"] if c in df_suc_c_agg.columns]
+            fig_csuc = px.bar(
+                df_suc_c_agg,
+                x="total_comprado",
+                y=y_col_c,
+                orientation="h",
+                labels={"total_comprado": "Inversión en Compras ($)", y_col_c: "Sucursal"},
+                title="Inversión en Compras por Farmacia ($)",
+                color="total_comprado",
+                color_continuous_scale="Oranges",
+                custom_data=custom_c
+            )
+            fig_csuc.update_traces(
+                hovertemplate="<b>%{y}</b><br><b>Inversión:</b> $%{x:,.2f}<extra></extra>"
+            )
+            fig_csuc.update_layout(yaxis={'categoryorder':'total ascending'}, height=340)
+            st.plotly_chart(fig_csuc, use_container_width=True)
+
+        with col_t_csuc:
+            tot_gral_c = df_suc_c_agg["total_comprado"].sum()
+            df_suc_c_agg["participacion"] = (df_suc_c_agg["total_comprado"] / tot_gral_c * 100) if tot_gral_c > 0 else 0
+            st.markdown("##### 📌 Distribución de Compras")
+            cols_tbl_c = [c for c in ["codigo_sucursal", "nombre_sucursal", "total_comprado", "unidades_compradas", "participacion"] if c in df_suc_c_agg.columns]
+            st.dataframe(
+                df_suc_c_agg[cols_tbl_c],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "codigo_sucursal": "Cód.",
+                    "nombre_sucursal": "Farmacia",
+                    "total_comprado": st.column_config.NumberColumn("Inversión ($)", format="$%.2f"),
+                    "unidades_compradas": st.column_config.NumberColumn("Unidades", format="%d"),
+                    "participacion": st.column_config.NumberColumn("% Part.", format="%.1f%%")
+                }
+            )
+
+    st.divider()
+
     st.markdown("#### 📋 Detalle de Artículos Comprados")
     if not df_comp.empty:
         cols_det_c = ["codigo_proveedor", "nombre_proveedor", "descripcion_linea"]
@@ -2396,6 +2551,87 @@ with tab_inventario:
             st.plotly_chart(fig_vsubl, use_container_width=True)
         else:
             st.info("Sin registros de sublíneas.")
+
+    st.divider()
+
+    # --- COMPARATIVA DE VALORIZACIÓN DE INVENTARIO ENTRE SUCURSALES ---
+    st.markdown("#### 🏢 Comparativa de Stock y Valorización entre Farmacias")
+    if not df_inv.empty:
+        df_inv_suc_calc = df_inv.copy()
+        if "codigo_sucursal" not in df_inv_suc_calc.columns or "nombre_sucursal" not in df_inv_suc_calc.columns:
+            cols_merge_is = [c for c in ["id_sucursal", "codigo_sucursal", "nombre"] if c in df_sucursales.columns]
+            df_inv_suc_calc = df_inv_suc_calc.merge(
+                df_sucursales[cols_merge_is].rename(columns={"nombre": "nombre_sucursal"}),
+                on="id_sucursal",
+                how="left"
+            )
+        if "nombre_sucursal" not in df_inv_suc_calc.columns and "nombre" in df_inv_suc_calc.columns:
+            df_inv_suc_calc["nombre_sucursal"] = df_inv_suc_calc["nombre"]
+
+        cols_grp_isuc = [c for c in ["codigo_sucursal", "nombre_sucursal"] if c in df_inv_suc_calc.columns]
+        if not cols_grp_isuc:
+            cols_grp_isuc = ["id_sucursal"]
+
+        df_suc_inv_agg = df_inv_suc_calc.groupby(cols_grp_isuc).agg(
+            valor_costo=("valor_total_inventario", "sum"),
+            valor_pvp=("valor_venta_inventario", "sum"),
+            stock_unidades=("stock_actual", "sum"),
+            articulos_distintos=("id_producto", "nunique")
+        ).reset_index().sort_values("valor_costo", ascending=False)
+
+        col_g_isuc, col_t_isuc = st.columns([3, 2])
+        with col_g_isuc:
+            y_col_i = "nombre_sucursal" if "nombre_sucursal" in df_suc_inv_agg.columns else cols_grp_isuc[0]
+            custom_cod = df_suc_inv_agg["codigo_sucursal"] if "codigo_sucursal" in df_suc_inv_agg.columns else [""] * len(df_suc_inv_agg)
+            custom_data_i = list(zip(custom_cod, df_suc_inv_agg["stock_unidades"], df_suc_inv_agg["articulos_distintos"]))
+
+            fig_isuc = go.Figure()
+            fig_isuc.add_trace(go.Bar(
+                x=df_suc_inv_agg[y_col_i],
+                y=df_suc_inv_agg["valor_costo"],
+                name="💰 Valor Costo ($)",
+                marker_color="#2c3e50",
+                customdata=custom_data_i,
+                hovertemplate="<b>%{x}</b><br><b>Valor Costo:</b> $%{y:,.2f}<br><b>Stock Físico:</b> %{customdata[1]:,} uds<br><b>Artículos:</b> %{customdata[2]}<extra></extra>"
+            ))
+            fig_isuc.add_trace(go.Bar(
+                x=df_suc_inv_agg[y_col_i],
+                y=df_suc_inv_agg["valor_pvp"],
+                name="🏷️ Valor PVP ($)",
+                marker_color="#16a085",
+                hovertemplate="<b>Valor PVP:</b> $%{y:,.2f}<extra></extra>"
+            ))
+            fig_isuc.update_layout(
+                title="Capital Inmovilizado en Stock por Farmacia (Costo vs PVP)",
+                barmode="group",
+                hovermode="x unified",
+                xaxis_title="Farmacia / Sucursal",
+                yaxis_title="Dólares ($)",
+                height=340,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_isuc, use_container_width=True)
+
+        with col_t_isuc:
+            tot_gral_inv = df_suc_inv_agg["valor_costo"].sum()
+            df_suc_inv_agg["participacion"] = (df_suc_inv_agg["valor_costo"] / tot_gral_inv * 100) if tot_gral_inv > 0 else 0
+            df_suc_inv_agg["margen_pct"] = round((df_suc_inv_agg["valor_pvp"] - df_suc_inv_agg["valor_costo"]) / df_suc_inv_agg["valor_pvp"] * 100, 1)
+
+            st.markdown("##### 📌 Distribución de Capital")
+            cols_tbl_i = [c for c in ["codigo_sucursal", "nombre_sucursal", "valor_costo", "stock_unidades", "margen_pct", "participacion"] if c in df_suc_inv_agg.columns]
+            st.dataframe(
+                df_suc_inv_agg[cols_tbl_i],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "codigo_sucursal": "Cód.",
+                    "nombre_sucursal": "Farmacia",
+                    "valor_costo": st.column_config.NumberColumn("Valor Costo ($)", format="$%.2f"),
+                    "stock_unidades": st.column_config.NumberColumn("Stock (Uds)", format="%d"),
+                    "margen_pct": st.column_config.NumberColumn("Margen", format="%.1f%%"),
+                    "participacion": st.column_config.NumberColumn("% Part.", format="%.1f%%")
+                }
+            )
 
     st.divider()
 
@@ -2934,18 +3170,37 @@ with tab_sugerencias:
 
         if articulos_multiproveedor:
             df_multi = df_costos_comp[df_costos_comp["codigo_articulo"].isin(articulos_multiproveedor)]
-            # Min y Max costo por articulo
-            costos_extremos = df_multi.groupby("codigo_articulo").agg(
-                costo_min=("costo_promedio", "min"),
-                costo_max=("costo_promedio", "max"),
-                nombre_producto=("nombre_producto", "first"),
-                unidades_totales=("unidades_compradas", "sum")
-            ).reset_index()
 
-            costos_extremos["diferencia_costo"] = costos_extremos["costo_max"] - costos_extremos["costo_min"]
-            costos_extremos["ahorro_potencial_pct"] = (costos_extremos["diferencia_costo"] / costos_extremos["costo_max"] * 100)
-            costos_extremos["ahorro_potencial_monto"] = costos_extremos["diferencia_costo"] * costos_extremos["unidades_totales"]
-            df_oportunidad_compras = costos_extremos[costos_extremos["diferencia_costo"] > 0.05].sort_values("ahorro_potencial_monto", ascending=False)
+            filas_oportunidad = []
+            for cod_art, g_art in df_multi.groupby("codigo_articulo"):
+                g_art_sorted = g_art.sort_values("costo_promedio")
+                mejor_fila = g_art_sorted.iloc[0]
+                peor_fila = g_art_sorted.iloc[-1]
+
+                c_min = mejor_fila["costo_promedio"]
+                c_max = peor_fila["costo_promedio"]
+                dif = c_max - c_min
+
+                if dif > 0.05:
+                    uds_tot = g_art["unidades_compradas"].sum()
+                    ahorro_pct = (dif / c_max * 100) if c_max > 0 else 0
+                    ahorro_monto = dif * uds_tot
+
+                    filas_oportunidad.append({
+                        "codigo_articulo": cod_art,
+                        "nombre_producto": mejor_fila["nombre_producto"],
+                        "mejor_proveedor": mejor_fila["nombre_proveedor"],
+                        "costo_min": c_min,
+                        "proveedor_costoso": peor_fila["nombre_proveedor"],
+                        "costo_max": c_max,
+                        "diferencia_costo": dif,
+                        "ahorro_potencial_pct": ahorro_pct,
+                        "unidades_totales": uds_tot,
+                        "ahorro_potencial_monto": ahorro_monto
+                    })
+
+            if filas_oportunidad:
+                df_oportunidad_compras = pd.DataFrame(filas_oportunidad).sort_values("ahorro_potencial_monto", ascending=False)
 
     # -------------------------------------------------------------
     # 3. MOTOR DE ANÁLISIS DE VENTAS & TICKETS
@@ -3037,17 +3292,22 @@ with tab_sugerencias:
         if not df_oportunidad_compras.empty:
             st.dataframe(
                 df_oportunidad_compras[[
-                    "codigo_articulo", "nombre_producto", "costo_min", "costo_max", 
+                    "codigo_articulo", "nombre_producto", 
+                    "mejor_proveedor", "costo_min", 
+                    "proveedor_costoso", "costo_max", 
                     "ahorro_potencial_pct", "ahorro_potencial_monto"
                 ]],
                 use_container_width=True,
+                hide_index=True,
                 column_config={
                     "codigo_articulo": "Cód.",
-                    "nombre_producto": "Descripción",
+                    "nombre_producto": "Descripción del Producto",
+                    "mejor_proveedor": "🏆 Mejor Proveedor",
                     "costo_min": st.column_config.NumberColumn("Mejor Costo ($)", format="$%.2f"),
+                    "proveedor_costoso": "⚠️ Prov. Más Costoso",
                     "costo_max": st.column_config.NumberColumn("Costo Mayor ($)", format="$%.2f"),
                     "ahorro_potencial_pct": st.column_config.NumberColumn("Ahorro %", format="%.1f%%"),
-                    "ahorro_potencial_monto": st.column_config.NumberColumn("Ahorro Potencial Total", format="$%.2f")
+                    "ahorro_potencial_monto": st.column_config.NumberColumn("Ahorro Estimado ($)", format="$%.2f")
                 }
             )
             ahorro_total_estimado = df_oportunidad_compras["ahorro_potencial_monto"].sum()
@@ -3099,18 +3359,49 @@ with tab_sugerencias:
             st.success("✅ La relación Contado / Crédito se mantiene en un rango equilibrado y saludable.")
 
     with col_v_sug2:
-        st.markdown("#### 🎯 Productos Tracción (Estrategia 80/20 Parejo)")
+        st.markdown("#### 🎯 Productos Tracción (Estrategia 80/20 Pareto)")
         if not df_v_prod.empty:
-            df_pareto = df_v_prod.groupby(["codigo_articulo", "nombre_producto"]).agg(
+            cols_pareto = ["codigo_articulo", "nombre_producto", "nombre_laboratorio", "descripcion_linea"]
+            cols_disp = [c for c in cols_pareto if c in df_v_prod.columns]
+
+            df_pareto = df_v_prod.groupby(cols_disp).agg(
                 total_venta=("total_venta_monto", "sum"),
                 unidades=("unidades_vendidas", "sum")
             ).reset_index().sort_values("total_venta", ascending=False)
 
             tot_ventas_p = df_pareto["total_venta"].sum()
-            df_pareto["pct_acumulado"] = (df_pareto["total_venta"].cumsum() / tot_ventas_p * 100)
-            top_80 = df_pareto[df_pareto["pct_acumulado"] <= 85]
+            df_pareto["pct_individual"] = (df_pareto["total_venta"] / tot_ventas_p * 100) if tot_ventas_p > 0 else 0
+            df_pareto["pct_acumulado"] = (df_pareto["total_venta"].cumsum() / tot_ventas_p * 100) if tot_ventas_p > 0 else 0
+            df_pareto["precio_promedio"] = round(df_pareto["total_venta"] / df_pareto["unidades"], 2)
+
+            top_80 = df_pareto[df_pareto["pct_acumulado"] <= 85].copy()
+            # Si el corte fue muy estricto y quedó vacío, asegurar al menos los primeros
+            if top_80.empty and not df_pareto.empty:
+                top_80 = df_pareto.head(min(5, len(df_pareto))).copy()
+
             pct_catalogo_80 = (len(top_80) / len(df_pareto) * 100) if len(df_pareto) > 0 else 0
 
             st.write(f"- Artículos activos en venta: **{len(df_pareto)}**")
-            st.write(f"- Artículos que generan el 80% de los ingresos: **{len(top_80)} ({pct_catalogo_80:.1f}% del catálogo)**")
-            st.info(f"💡 **Recomendación:** Priorizar exhibición, inventario cero-quiebre y acuerdos comerciales exclusivos para estos **{len(top_80)} productos estrella**, ya que representan el núcleo de ingresos del negocio.")
+            st.write(f"- Artículos estrella (Clase A): **{len(top_80)} ({pct_catalogo_80:.1f}% del catálogo)**")
+            st.info(f"💡 **Recomendación:** Blindar con stock de seguridad y acuerdos exclusivos estos **{len(top_80)} productos**, ya que concentran el 80% de la facturación.")
+
+            # Tabla Interactiva de Artículos Tracción (Pareto 80/20)
+            st.dataframe(
+                top_80[[
+                    "codigo_articulo", "nombre_producto", "nombre_laboratorio", 
+                    "unidades", "total_venta", "pct_individual", "pct_acumulado"
+                ]],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "codigo_articulo": "Código",
+                    "nombre_producto": "Producto Estrella (Tracción)",
+                    "nombre_laboratorio": "Laboratorio",
+                    "unidades": st.column_config.NumberColumn("Uds Vendidas", format="%d"),
+                    "total_venta": st.column_config.NumberColumn("Facturación ($)", format="$%.2f"),
+                    "pct_individual": st.column_config.NumberColumn("% Venta", format="%.2f%%"),
+                    "pct_acumulado": st.column_config.NumberColumn("% Acumulado", format="%.1f%%")
+                }
+            )
+        else:
+            st.info("Sin registros de venta para calcular Pareto.")
