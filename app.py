@@ -9,8 +9,8 @@ import random
 import os
 
 # --- Configuración de Marca y Empresa ---
-NOMBRE_EMPRESA = "GRUPO SAN ANSELMO"
-SLOGAN_EMPRESA = "Red de Farmacias - Cuadro de Mando Integral y Control Operativo"
+NOMBRE_EMPRESA = "GRUPO FARMA CENTER"
+SLOGAN_EMPRESA = "Farmacia La Corina PC, C.A. – Cuadro de Mando Integral y Control Operativo MIVO 7.1"
 ICONO_PAGINA   = "💊"
 
 # Rutas de logotipos (puedes colocar tu archivo logo.png en la carpeta assets/)
@@ -39,37 +39,113 @@ def get_db_engine():
 def generar_datos_prueba():
     hoy = datetime.now().date()
     
-    # 1. Maestro Sucursales (con Zona y Código de 4 chars)
+    # 1. Maestro Sucursales (con Zona y Código de 4 chars) - Grupo Farma Center / Farmacia La Corina
     sucursales = [
-        {"id_sucursal": 1, "codigo_sucursal": "F001", "nombre": "Farmacia Central", "ciudad": "Caracas", "zona": "Gran Caracas"},
-        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia Las Mercedes", "ciudad": "Caracas", "zona": "Gran Caracas"},
-        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Bella Vista", "ciudad": "Maracaibo", "zona": "Occidente"},
-        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia Los Sauces", "ciudad": "Valencia", "zona": "Centro"},
-        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia El Parral", "ciudad": "Valencia", "zona": "Centro"}
+        {"id_sucursal": 1, "codigo_sucursal": "F001", "nombre": "Farmacia La Corina (Sede Principal)", "ciudad": "Puerto Cabello", "zona": "Carabobo"},
+        {"id_sucursal": 2, "codigo_sucursal": "F002", "nombre": "Farmacia Farma Center Centro", "ciudad": "Valencia", "zona": "Carabobo"},
+        {"id_sucursal": 3, "codigo_sucursal": "F003", "nombre": "Farmacia Farma Center Norte", "ciudad": "Naguanagua", "zona": "Carabobo"},
+        {"id_sucursal": 4, "codigo_sucursal": "F004", "nombre": "Farmacia Farma Center Express", "ciudad": "Guacara", "zona": "Carabobo"},
+        {"id_sucursal": 5, "codigo_sucursal": "F005", "nombre": "Farmacia Farma Center San Diego", "ciudad": "San Diego", "zona": "Carabobo"}
     ]
     df_suc = pd.DataFrame(sucursales)
 
-    # 2. Maestro Líneas (Código de 6 chars)
+    # 2. Maestro Líneas Homologadas MIVO 7.1 (13 Líneas Maestras Oficiales)
     lineas = [
-        {"id_linea": 1, "codigo_linea": "LIN001", "descripcion_linea": "Cardiovascular"},
-        {"id_linea": 2, "codigo_linea": "LIN002", "descripcion_linea": "Antibióticos y Antivirales"},
-        {"id_linea": 3, "codigo_linea": "LIN003", "descripcion_linea": "Analgésicos y Antiinflamatorios"},
-        {"id_linea": 4, "codigo_linea": "LIN004", "descripcion_linea": "Gastrointestinales"},
-        {"id_linea": 5, "codigo_linea": "LIN005", "descripcion_linea": "Vitaminas y Suplementos"},
-        {"id_linea": 6, "codigo_linea": "LIN006", "descripcion_linea": "Antihistamínicos y Respiratorios"},
-        {"id_linea": 7, "codigo_linea": "LIN007", "descripcion_linea": "Endocrinología y Diabetes"}
+        {"id_linea": 1, "codigo_linea": "LIN001", "descripcion_linea": "01 Especialidades farmacéuticas"},
+        {"id_linea": 2, "codigo_linea": "LIN002", "descripcion_linea": "02 Sueros y soluciones"},
+        {"id_linea": 3, "codigo_linea": "LIN003", "descripcion_linea": "03 Productos naturales y bienestar"},
+        {"id_linea": 4, "codigo_linea": "LIN004", "descripcion_linea": "04 Cuidado personal e higiene"},
+        {"id_linea": 5, "codigo_linea": "LIN005", "descripcion_linea": "05 Dermocosmética y belleza"},
+        {"id_linea": 6, "codigo_linea": "LIN006", "descripcion_linea": "06 Productos infantiles y maternidad"},
+        {"id_linea": 7, "codigo_linea": "LIN007", "descripcion_linea": "07 Dispositivos médicos y rehabilitación"},
+        {"id_linea": 8, "codigo_linea": "LIN008", "descripcion_linea": "08 Material médico y primeros auxilios"},
+        {"id_linea": 9, "codigo_linea": "LIN009", "descripcion_linea": "09 Alimentos y bebidas"},
+        {"id_linea": 10, "codigo_linea": "LIN010", "descripcion_linea": "10 Productos veterinarios"},
+        {"id_linea": 11, "codigo_linea": "LIN011", "descripcion_linea": "11 Hogar y uso doméstico"},
+        {"id_linea": 12, "codigo_linea": "LIN012", "descripcion_linea": "12 Accesorios y otros productos"},
+        {"id_linea": 13, "codigo_linea": "LIN013", "descripcion_linea": "13 Servicios"}
     ]
     df_lineas = pd.DataFrame(lineas)
 
-    # 3. Maestro Sublíneas (Código de 6 chars)
+    # 3. Maestro Sublíneas Homologadas MIVO 7.1 (Catálogo Estándar Farma Center)
     sublineas = [
-        {"id_sublinea": 1, "codigo_sublinea": "SL001", "descripcion_sublinea": "Cardiovasculares y Antihipertensivos", "id_linea": 1},
-        {"id_sublinea": 2, "codigo_sublinea": "SL002", "descripcion_sublinea": "Antibióticos y Antimicrobianos", "id_linea": 2},
-        {"id_sublinea": 3, "codigo_sublinea": "SL003", "descripcion_sublinea": "Analgésicos y Antiinflamatorios", "id_linea": 3},
-        {"id_sublinea": 4, "codigo_sublinea": "SL004", "descripcion_sublinea": "Gastroenterología y Antiácidos", "id_linea": 4},
-        {"id_sublinea": 5, "codigo_sublinea": "SL005", "descripcion_sublinea": "Vitaminas, Minerales y Suplementos", "id_linea": 5},
-        {"id_sublinea": 6, "codigo_sublinea": "SL006", "descripcion_sublinea": "Respiratorios y Antialérgicos", "id_linea": 6},
-        {"id_sublinea": 7, "codigo_sublinea": "SL007", "descripcion_sublinea": "Endocrinología y Diabetes", "id_linea": 7}
+        # Línea 01: Especialidades Farmacéuticas
+        {"id_sublinea": 1, "codigo_sublinea": "0101", "descripcion_sublinea": "Analgésicos y antipiréticos", "id_linea": 1},
+        {"id_sublinea": 2, "codigo_sublinea": "0102", "descripcion_sublinea": "Antiinflamatorios", "id_linea": 1},
+        {"id_sublinea": 3, "codigo_sublinea": "0103", "descripcion_sublinea": "Cardiovasculares", "id_linea": 1},
+        {"id_sublinea": 4, "codigo_sublinea": "0104", "descripcion_sublinea": "Respiratorios", "id_linea": 1},
+        {"id_sublinea": 5, "codigo_sublinea": "0105", "descripcion_sublinea": "Gastrointestinales", "id_linea": 1},
+        {"id_sublinea": 6, "codigo_sublinea": "0106", "descripcion_sublinea": "Antialérgicos", "id_linea": 1},
+        {"id_sublinea": 7, "codigo_sublinea": "0107", "descripcion_sublinea": "Dermatológicos", "id_linea": 1},
+        {"id_sublinea": 8, "codigo_sublinea": "0108", "descripcion_sublinea": "Oftálmicos y óticos", "id_linea": 1},
+        {"id_sublinea": 9, "codigo_sublinea": "0109", "descripcion_sublinea": "Preparados hormonales", "id_linea": 1},
+        {"id_sublinea": 10, "codigo_sublinea": "0110", "descripcion_sublinea": "Antidiabéticos", "id_linea": 1},
+        {"id_sublinea": 11, "codigo_sublinea": "0111", "descripcion_sublinea": "Vitaminas y minerales", "id_linea": 1},
+        {"id_sublinea": 12, "codigo_sublinea": "0112", "descripcion_sublinea": "Sistema nervioso", "id_linea": 1},
+        {"id_sublinea": 13, "codigo_sublinea": "0113", "descripcion_sublinea": "Antifúngicos", "id_linea": 1},
+        {"id_sublinea": 14, "codigo_sublinea": "0114", "descripcion_sublinea": "Otros preparados farmacéuticos", "id_linea": 1},
+        # Línea 02: Sueros y soluciones
+        {"id_sublinea": 15, "codigo_sublinea": "0201", "descripcion_sublinea": "Soluciones fisiológicas", "id_linea": 2},
+        {"id_sublinea": 16, "codigo_sublinea": "0202", "descripcion_sublinea": "Soluciones intravenosas", "id_linea": 2},
+        {"id_sublinea": 17, "codigo_sublinea": "0203", "descripcion_sublinea": "Soluciones de rehidratación", "id_linea": 2},
+        {"id_sublinea": 18, "codigo_sublinea": "0204", "descripcion_sublinea": "Otras soluciones", "id_linea": 2},
+        # Línea 03: Productos naturales y bienestar
+        {"id_sublinea": 19, "codigo_sublinea": "0301", "descripcion_sublinea": "Productos naturales", "id_linea": 3},
+        {"id_sublinea": 20, "codigo_sublinea": "0302", "descripcion_sublinea": "Suplementos y complementos nutricionales", "id_linea": 3},
+        {"id_sublinea": 21, "codigo_sublinea": "0303", "descripcion_sublinea": "Productos de bienestar", "id_linea": 3},
+        # Línea 04: Cuidado personal e higiene
+        {"id_sublinea": 22, "codigo_sublinea": "0401", "descripcion_sublinea": "Cuidado del cabello", "id_linea": 4},
+        {"id_sublinea": 23, "codigo_sublinea": "0402", "descripcion_sublinea": "Higiene bucal", "id_linea": 4},
+        {"id_sublinea": 24, "codigo_sublinea": "0403", "descripcion_sublinea": "Jabones y limpieza personal", "id_linea": 4},
+        {"id_sublinea": 25, "codigo_sublinea": "0404", "descripcion_sublinea": "Desodorantes", "id_linea": 4},
+        {"id_sublinea": 26, "codigo_sublinea": "0405", "descripcion_sublinea": "Cuidado femenino", "id_linea": 4},
+        {"id_sublinea": 27, "codigo_sublinea": "0406", "descripcion_sublinea": "Higiene íntima y preservativos", "id_linea": 4},
+        {"id_sublinea": 28, "codigo_sublinea": "0407", "descripcion_sublinea": "Repelentes", "id_linea": 4},
+        {"id_sublinea": 29, "codigo_sublinea": "0408", "descripcion_sublinea": "Cuidado de las uñas", "id_linea": 4},
+        # Línea 05: Dermocosmética y belleza
+        {"id_sublinea": 30, "codigo_sublinea": "0501", "descripcion_sublinea": "Cuidado de la piel", "id_linea": 5},
+        {"id_sublinea": 31, "codigo_sublinea": "0502", "descripcion_sublinea": "Cosmética dermatológica", "id_linea": 5},
+        {"id_sublinea": 32, "codigo_sublinea": "0503", "descripcion_sublinea": "Maquillaje", "id_linea": 5},
+        {"id_sublinea": 33, "codigo_sublinea": "0504", "descripcion_sublinea": "Tratamientos cosméticos", "id_linea": 5},
+        # Línea 06: Productos infantiles y maternidad
+        {"id_sublinea": 34, "codigo_sublinea": "0601", "descripcion_sublinea": "Pañales", "id_linea": 6},
+        {"id_sublinea": 35, "codigo_sublinea": "0602", "descripcion_sublinea": "Higiene infantil", "id_linea": 6},
+        {"id_sublinea": 36, "codigo_sublinea": "0603", "descripcion_sublinea": "Accesorios infantiles", "id_linea": 6},
+        {"id_sublinea": 37, "codigo_sublinea": "0604", "descripcion_sublinea": "Leches infantiles", "id_linea": 6},
+        {"id_sublinea": 38, "codigo_sublinea": "0605", "descripcion_sublinea": "Productos de maternidad", "id_linea": 6},
+        # Línea 07: Dispositivos médicos y rehabilitación
+        {"id_sublinea": 39, "codigo_sublinea": "0701", "descripcion_sublinea": "Accesorios de rehabilitación", "id_linea": 7},
+        {"id_sublinea": 40, "codigo_sublinea": "0702", "descripcion_sublinea": "Productos para incontinencia", "id_linea": 7},
+        {"id_sublinea": 41, "codigo_sublinea": "0703", "descripcion_sublinea": "Dispositivos de medición y diagnóstico", "id_linea": 7},
+        {"id_sublinea": 42, "codigo_sublinea": "0704", "descripcion_sublinea": "Accesorios médicos", "id_linea": 7},
+        {"id_sublinea": 43, "codigo_sublinea": "0705", "descripcion_sublinea": "Productos oftálmicos no medicinales", "id_linea": 7},
+        # Línea 08: Material médico y primeros auxilios
+        {"id_sublinea": 44, "codigo_sublinea": "0801", "descripcion_sublinea": "Material de curación", "id_linea": 8},
+        {"id_sublinea": 45, "codigo_sublinea": "0802", "descripcion_sublinea": "Primeros auxilios", "id_linea": 8},
+        {"id_sublinea": 46, "codigo_sublinea": "0803", "descripcion_sublinea": "Material médico desechable", "id_linea": 8},
+        {"id_sublinea": 47, "codigo_sublinea": "0804", "descripcion_sublinea": "Envases y frascos de uso médico", "id_linea": 8},
+        # Línea 09: Alimentos y bebidas
+        {"id_sublinea": 48, "codigo_sublinea": "0901", "descripcion_sublinea": "Alimentos", "id_linea": 9},
+        {"id_sublinea": 49, "codigo_sublinea": "0902", "descripcion_sublinea": "Leches y productos nutricionales", "id_linea": 9},
+        {"id_sublinea": 50, "codigo_sublinea": "0903", "descripcion_sublinea": "Bebidas", "id_linea": 9},
+        {"id_sublinea": 51, "codigo_sublinea": "0904", "descripcion_sublinea": "Bebidas energéticas y nutritivas", "id_linea": 9},
+        {"id_sublinea": 52, "codigo_sublinea": "0905", "descripcion_sublinea": "Golosinas", "id_linea": 9},
+        {"id_sublinea": 53, "codigo_sublinea": "0906", "descripcion_sublinea": "Helados", "id_linea": 9},
+        # Línea 10: Productos veterinarios
+        {"id_sublinea": 54, "codigo_sublinea": "1001", "descripcion_sublinea": "Productos para mascotas", "id_linea": 10},
+        {"id_sublinea": 55, "codigo_sublinea": "1002", "descripcion_sublinea": "Productos veterinarios", "id_linea": 10},
+        # Línea 11: Hogar y uso doméstico
+        {"id_sublinea": 56, "codigo_sublinea": "1101", "descripcion_sublinea": "Productos para el hogar", "id_linea": 11},
+        {"id_sublinea": 57, "codigo_sublinea": "1102", "descripcion_sublinea": "Productos para el calzado", "id_linea": 11},
+        # Línea 12: Accesorios y otros productos
+        {"id_sublinea": 58, "codigo_sublinea": "1201", "descripcion_sublinea": "Pilas y baterías", "id_linea": 12},
+        {"id_sublinea": 59, "codigo_sublinea": "1202", "descripcion_sublinea": "Útiles escolares", "id_linea": 12},
+        {"id_sublinea": 60, "codigo_sublinea": "1203", "descripcion_sublinea": "Cámaras y rollos", "id_linea": 12},
+        {"id_sublinea": 61, "codigo_sublinea": "1204", "descripcion_sublinea": "Tarjetas y papeletas", "id_linea": 12},
+        {"id_sublinea": 62, "codigo_sublinea": "1205", "descripcion_sublinea": "Accesorios diversos", "id_linea": 12},
+        # Línea 13: Servicios
+        {"id_sublinea": 63, "codigo_sublinea": "1301", "descripcion_sublinea": "Servicios telefónicos", "id_linea": 13},
+        {"id_sublinea": 64, "codigo_sublinea": "1302", "descripcion_sublinea": "Otros servicios", "id_linea": 13}
     ]
     df_sublineas = pd.DataFrame(sublineas)
 
@@ -106,56 +182,76 @@ def generar_datos_prueba():
     ]
     df_segmentos_prov = pd.DataFrame(segmentos_proveedor)
 
-    # 6. Maestro Proveedores (Código de 10 chars, Tipo de 6 chars y Segmento de 6 chars)
+    # 6. Maestro Proveedores (Código correlativo de 6 dígitos según estándar MIVO 7.1)
     proveedores = [
-        {"id_proveedor": 1, "codigo_proveedor": "PRV0000001", "nombre_proveedor": "Droguería Cobeca", "rif_proveedor": "J-00012345-1", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
-        {"id_proveedor": 2, "codigo_proveedor": "PRV0000002", "nombre_proveedor": "Droguería Nena", "rif_proveedor": "J-00045678-2", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
-        {"id_proveedor": 3, "codigo_proveedor": "PRV0000003", "nombre_proveedor": "Drolanca", "rif_proveedor": "J-00089123-3", "tipo_proveedor": "DROGUE", "segmento": "MISCEL"},
-        {"id_proveedor": 4, "codigo_proveedor": "PRV0000004", "nombre_proveedor": "Grupo Farvenca", "rif_proveedor": "J-00078945-4", "tipo_proveedor": "DISTRI", "segmento": "EQUIPO"},
-        {"id_proveedor": 5, "codigo_proveedor": "PRV0000005", "nombre_proveedor": "Droguería Vitalis", "rif_proveedor": "J-00032165-5", "tipo_proveedor": "FABRIC", "segmento": "MEDICA"}
+        {"id_proveedor": 1, "codigo_proveedor": "000001", "nombre_proveedor": "Droguería Cobeca", "rif_proveedor": "J-00012345-1", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
+        {"id_proveedor": 2, "codigo_proveedor": "000002", "nombre_proveedor": "Droguería Nena", "rif_proveedor": "J-00045678-2", "tipo_proveedor": "DROGUE", "segmento": "MEDICA"},
+        {"id_proveedor": 3, "codigo_proveedor": "000003", "nombre_proveedor": "Drolanca", "rif_proveedor": "J-00089123-3", "tipo_proveedor": "DROGUE", "segmento": "MISCEL"},
+        {"id_proveedor": 4, "codigo_proveedor": "000004", "nombre_proveedor": "Grupo Farvenca", "rif_proveedor": "J-00078945-4", "tipo_proveedor": "DISTRI", "segmento": "EQUIPO"},
+        {"id_proveedor": 5, "codigo_proveedor": "000005", "nombre_proveedor": "Droguería Vitalis", "rif_proveedor": "J-00032165-5", "tipo_proveedor": "FABRIC", "segmento": "MEDICA"}
     ]
     df_provs = pd.DataFrame(proveedores)
 
-    # 5. Maestro Clientes (Código de 10 chars)
+    # 7. Maestro Clientes (Cédula de 10 dígitos o RIF según estándar MIVO 7.1)
     clientes = [
-        {"id_cliente": 1, "codigo_cliente": "CLI0000001", "nombre_cliente": "Roberto Méndez", "tipo_cliente": "Particular", "identificacion": "V-14.238.901"},
-        {"id_cliente": 2, "codigo_cliente": "CLI0000002", "nombre_cliente": "Elena Salazar", "tipo_cliente": "Particular", "identificacion": "V-18.765.432"},
-        {"id_cliente": 3, "codigo_cliente": "CLI0000003", "nombre_cliente": "Seguros Caracas", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-30491823-1"},
-        {"id_cliente": 4, "codigo_cliente": "CLI0000004", "nombre_cliente": "Mercantil Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-00012345-0"},
-        {"id_cliente": 5, "codigo_cliente": "CLI0000005", "nombre_cliente": "Empresas Polar (Convenio)", "tipo_cliente": "Convenio", "identificacion": "J-00045678-9"},
-        {"id_cliente": 6, "codigo_cliente": "CLI0000006", "nombre_cliente": "Banesco Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-29837192-3"}
+        {"id_cliente": 1, "codigo_cliente": "0014238901", "nombre_cliente": "Roberto Méndez", "tipo_cliente": "Particular", "identificacion": "V-14238901"},
+        {"id_cliente": 2, "codigo_cliente": "0018765432", "nombre_cliente": "Elena Salazar", "tipo_cliente": "Particular", "identificacion": "V-18765432"},
+        {"id_cliente": 3, "codigo_cliente": "J304918231", "nombre_cliente": "Seguros Caracas", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-30491823-1"},
+        {"id_cliente": 4, "codigo_cliente": "J000123450", "nombre_cliente": "Mercantil Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-00012345-0"},
+        {"id_cliente": 5, "codigo_cliente": "J000456789", "nombre_cliente": "Empresas Polar (Convenio)", "tipo_cliente": "Convenio", "identificacion": "J-00045678-9"},
+        {"id_cliente": 6, "codigo_cliente": "J298371923", "nombre_cliente": "Banesco Seguros", "tipo_cliente": "Seguro / Empresa", "identificacion": "J-29837192-3"}
     ]
     df_clientes = pd.DataFrame(clientes)
 
-    # 8. Maestro Productos (con codigo_articulo de 30 chars, codigo_barras >= 15 chars, id_linea, id_sublinea, id_laboratorio)
+    # 8. Maestro Productos (SKU de 6 dígitos según estándar MIVO 7.1 y atributos regulatorios)
+    # Formato: (id, sku_6d, codigo_barras, nombre, id_linea, id_sublinea, id_lab, categoria_mivo, es_regulado)
     productos = [
-        (1, "ART-CARDIO-00001", "759100100000015", "Atorvastatina 20mg x 30 Tab", 1, 1, 1),
-        (2, "ART-CARDIO-00002", "759100200000025", "Losartán Potásico 50mg x 30 Comp", 1, 1, 3),
-        (3, "ART-ANTI-000001",  "759100300000035", "Amoxicilina + Ác. Clavulánico 875mg", 2, 2, 5),
-        (4, "ART-ANALG-00001",  "759100400000045", "Ibuprofeno 400mg x 20 Cáps", 3, 3, 2),
-        (5, "ART-ANALG-00002",  "759100500000055", "Paracetamol 500mg x 20 Tab", 3, 3, 3),
-        (6, "ART-GASTRO-0001",  "759100600000065", "Omeprazol 20mg x 28 Cáps", 4, 4, 4),
-        (7, "ART-VITAM-00001",  "759100700000075", "Vitamina C 1000mg Efervescente", 5, 5, 2),
-        (8, "ART-ENDOC-00001",  "759100800000085", "Metformina 850mg x 30 Tab", 7, 7, 6),
-        (9, "ART-RESP-000001",  "759100900000095", "Loratadina 10mg x 10 Tab", 6, 6, 4),
-        (10, "ART-RESP-000002", "759101000000105", "Cetirizina 10mg x 10 Tab", 6, 6, 5),
-        (11, "ART-ANALG-00003", "759101100000115", "Diclofenac Sódico 50mg x 20 Tab", 3, 3, 7),
-        (12, "ART-CARDIO-00003", "759101200000125", "Enalapril 20mg x 30 Tab", 1, 1, 3),
-        (13, "ART-ANTI-000002",  "759101300000135", "Azitromicina 500mg x 3 Tab", 2, 2, 1),
-        (14, "ART-VITAM-00002",  "759101400000145", "Complejo B Forte x 30 Grageas", 5, 5, 2),
-        (15, "ART-ANTI-000003",  "759101500000155", "Ciprofloxacina 500mg x 10 Tab", 2, 2, 5),
-        (16, "ART-GASTRO-0002",  "759101600000165", "Pantoprazol 40mg x 14 Tab", 4, 4, 6),
-        (17, "ART-ENDOC-00002",  "759101700000175", "Levotiroxina 100mcg x 50 Tab", 7, 7, 6),
-        (18, "ART-RESP-000003",  "759101800000185", "Salbutamol Inhalador 100mcg", 6, 6, 8),
-        (19, "ART-CARDIO-00004", "759101900000195", "Clopidogrel 75mg x 28 Tab", 1, 1, 8),
-        (20, "ART-ANALG-00004",  "759102000000205", "Ketoprofeno 100mg x 24 Cáps", 3, 3, 4),
-        (21, "ART-RESP-000004",  "759102100000215", "Desloratadina 5mg x 10 Tab", 6, 6, 1),
-        (22, "ART-VITAM-00003",  "759102200000225", "Ácido Fólico 5mg x 30 Tab", 5, 5, 3),
-        (23, "ART-ANTI-000004",  "759102300000235", "Fluconazol 150mg x 2 Cáps", 2, 2, 1),
-        (24, "ART-ENDOC-00003",  "759102400000245", "Glimepirida 4mg x 30 Tab", 7, 7, 8),
-        (25, "ART-VITAM-00004",  "759102500000255", "Calcio + Vitamina D3 x 60 Tab", 5, 5, 2)
+        # Línea 01: Especialidades Farmacéuticas
+        (1, "000101", "759100100000015", "Atorvastatina 20mg x 30 Tab", 1, 3, 1, "Medicinas", False),
+        (2, "000102", "759100200000025", "Losartán Potásico 50mg x 30 Comp", 1, 3, 3, "Medicinas", True),
+        (3, "000103", "759100300000035", "Amoxicilina + Ác. Clavulánico 875mg", 1, 14, 5, "Antibióticos", True),
+        (4, "000104", "759100400000045", "Ibuprofeno 400mg x 20 Cáps", 1, 2, 2, "Medicinas", False),
+        (5, "000105", "759100500000055", "Paracetamol 500mg x 20 Tab", 1, 1, 3, "Medicinas", False),
+        (6, "000106", "759100600000065", "Omeprazol 20mg x 28 Cáps", 1, 5, 4, "Medicinas", True),
+        (7, "000107", "759100700000075", "Vitamina C 1000mg Efervescente", 1, 11, 2, "Medicinas", False),
+        (8, "000108", "759100800000085", "Metformina 850mg x 30 Tab", 1, 10, 6, "Medicinas", True),
+        (9, "000109", "759100900000095", "Loratadina 10mg x 10 Tab", 1, 6, 4, "Medicinas", False),
+        (10, "000110", "759101000000105", "Cetirizina 10mg x 10 Tab", 1, 6, 5, "Medicinas", False),
+        (11, "000111", "759101100000115", "Diclofenac Sódico 50mg x 20 Tab", 1, 2, 7, "Medicinas", False),
+        (12, "000112", "759101200000125", "Enalapril 20mg x 30 Tab", 1, 3, 3, "Medicinas", True),
+        (13, "000113", "759101300000135", "Azitromicina 500mg x 3 Tab", 1, 14, 1, "Antibióticos", True),
+        (14, "000114", "759101400000145", "Clonazepam 2mg x 30 Tab", 1, 12, 6, "Psicotrópicos controlados", True),
+        (15, "000115", "759101500000155", "Ciprofloxacina 500mg x 10 Tab", 1, 14, 5, "Antibióticos", True),
+        (16, "000116", "759101600000165", "Alprazolam 0.5mg x 30 Tab", 1, 12, 7, "Psicotrópicos controlados", True),
+        (17, "000117", "759101700000175", "Levotiroxina 100mcg x 50 Tab", 1, 9, 6, "Medicinas", True),
+        (18, "000118", "759101800000185", "Salbutamol Inhalador 100mcg", 1, 4, 8, "Medicinas", True),
+        (19, "000119", "759101900000195", "Clopidogrel 75mg x 28 Tab", 1, 3, 8, "Medicinas", False),
+        (20, "000120", "759102000000205", "Ketoprofeno 100mg x 24 Cáps", 1, 2, 4, "Medicinas", False),
+        # Línea 02: Sueros y Soluciones
+        (21, "000201", "759102100000215", "Solución Fisiológica 0.9% 500ml", 2, 15, 5, "Medicinas", True),
+        (22, "000202", "759102200000225", "Solución Ringer Lactato 500ml", 2, 16, 5, "Medicinas", True),
+        (23, "000203", "759102300000235", "Suero Oral Rehidratante Polvo", 2, 17, 3, "Medicinas", False),
+        # Línea 04: Cuidado personal e higiene
+        (24, "000401", "759102400000245", "Jabón Antibacterial Dermocuidado 120g", 4, 24, 2, "Misceláneos", False),
+        (25, "000402", "759102500000255", "Crema Dental Protección Total 100ml", 4, 23, 2, "Misceláneos", False),
+        (26, "000403", "759102600000265", "Desodorante Antitranspirante Roll-On", 4, 25, 4, "Misceláneos", False),
+        # Línea 06: Productos infantiles y maternidad
+        (27, "000601", "759102700000275", "Pañales Desechables Etapa 3 x 40", 6, 34, 2, "Misceláneos", False),
+        (28, "000602", "759102800000285", "Fórmula Infantil Nan Pro 1 400g", 6, 37, 8, "Misceláneos", True),
+        # Línea 07: Dispositivos médicos y rehabilitación
+        (29, "000701", "759102900000295", "Tensiómetro Digital de Brazo", 7, 41, 1, "Misceláneos", False),
+        (30, "000702", "759103000000305", "Glucómetro Digital + 10 Tiras", 7, 41, 6, "Misceláneos", False),
+        # Línea 08: Material médico y primeros auxilios
+        (31, "000801", "759103100000315", "Alcohol Antiséptico 70% 500ml", 8, 45, 3, "Misceláneos", False),
+        (32, "000802", "759103200000325", "Gasa Estéril 10x10cm x 10 Uds", 8, 44, 4, "Misceláneos", False),
+        # Línea 09: Alimentos y bebidas
+        (33, "000901", "759103300000335", "Agua Mineral sin Gas 500ml", 9, 50, 7, "Misceláneos", False),
+        (34, "000902", "759103400000345", "Bebida Hidratante Gatorade 500ml", 9, 51, 7, "Misceláneos", False)
     ]
-    df_prod = pd.DataFrame(productos, columns=["id_producto", "codigo_articulo", "codigo_barras", "nombre_producto", "id_linea", "id_sublinea", "id_laboratorio"])
+    df_prod = pd.DataFrame(productos, columns=[
+        "id_producto", "codigo_articulo", "codigo_barras", "nombre_producto", 
+        "id_linea", "id_sublinea", "id_laboratorio", "categoria_mivo", "es_regulado"
+    ])
     df_prod = df_prod.merge(df_lineas[["id_linea", "codigo_linea", "descripcion_linea"]], on="id_linea")
     df_prod = df_prod.merge(df_sublineas[["id_sublinea", "codigo_sublinea", "descripcion_sublinea"]], on="id_sublinea")
     df_prod = df_prod.merge(df_labs[["id_laboratorio", "codigo_laboratorio", "nombre_laboratorio"]], on="id_laboratorio")
