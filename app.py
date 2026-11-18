@@ -535,13 +535,16 @@ def generar_datos_prueba():
         for f in fechas:
             ops = random.randint(45, 160)
             fact = round(ops * random.uniform(18.5, 38.0), 2)
-            pct_cred = random.uniform(0.15, 0.35) # Entre 15% y 35% en crédito
+            pct_cred = random.uniform(0.12, 0.25)   # Entre 12% y 25% crédito tradicional
+            pct_cash = random.uniform(0.08, 0.20)   # Entre 8% y 20% modalidad Cashea
             v_cred = round(fact * pct_cred, 2)
-            v_cont = round(fact - v_cred, 2)
+            v_cash = round(fact * pct_cash, 2)
+            v_cont = round(fact - v_cred - v_cash, 2)
             
-            # Reparto de operaciones contado y crédito
-            ops_cred = max(1, int(round(ops * random.uniform(0.12, 0.28))))
-            ops_cont = ops - ops_cred
+            # Reparto de operaciones contado, crédito y Cashea
+            ops_cred = max(1, int(round(ops * random.uniform(0.10, 0.22))))
+            ops_cash = max(1, int(round(ops * random.uniform(0.08, 0.18))))
+            ops_cont = max(1, ops - ops_cred - ops_cash)
             
             filas_vta.append({
                 "id_sucursal": suc["id_sucursal"],
@@ -549,9 +552,11 @@ def generar_datos_prueba():
                 "total_facturado": fact,
                 "ventas_contado": v_cont,
                 "ventas_credito": v_cred,
+                "ventas_cashea": v_cash,
                 "numero_operaciones": ops,
                 "operaciones_contado": ops_cont,
-                "operaciones_credito": ops_cred
+                "operaciones_credito": ops_cred,
+                "operaciones_cashea": ops_cash
             })
     df_vta_dia = pd.DataFrame(filas_vta)
 
@@ -1037,8 +1042,12 @@ if modo_datos == "Simulación (Datos de Prueba)":
             total_facturado=("total_venta_monto", "sum"),
             numero_operaciones=("unidades_vendidas", "count")
         ).reset_index()
-        df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.75
-        df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.25
+        df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.65
+        df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.20
+        df_v_dia["ventas_cashea"] = df_v_dia["total_facturado"] * 0.15
+        df_v_dia["operaciones_contado"] = (df_v_dia["numero_operaciones"] * 0.65).astype(int)
+        df_v_dia["operaciones_credito"] = (df_v_dia["numero_operaciones"] * 0.20).astype(int)
+        df_v_dia["operaciones_cashea"] = df_v_dia["numero_operaciones"] - df_v_dia["operaciones_contado"] - df_v_dia["operaciones_credito"]
     else:
         df_v_dia = datos["ventas_diarias"]
         df_v_dia = df_v_dia[(df_v_dia["fecha"] >= f_ini) & (df_v_dia["fecha"] <= f_fin)]
@@ -1204,20 +1213,24 @@ else:
                     total_facturado=("total_venta_monto", "sum"),
                     numero_operaciones=("unidades_vendidas", "count")
                 ).reset_index()
-                df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.75
-                df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.25
-                df_v_dia["operaciones_contado"] = (df_v_dia["numero_operaciones"] * 0.8).astype(int)
-                df_v_dia["operaciones_credito"] = df_v_dia["numero_operaciones"] - df_v_dia["operaciones_contado"]
+                df_v_dia["ventas_contado"] = df_v_dia["total_facturado"] * 0.65
+                df_v_dia["ventas_credito"] = df_v_dia["total_facturado"] * 0.20
+                df_v_dia["ventas_cashea"] = df_v_dia["total_facturado"] * 0.15
+                df_v_dia["operaciones_contado"] = (df_v_dia["numero_operaciones"] * 0.65).astype(int)
+                df_v_dia["operaciones_credito"] = (df_v_dia["numero_operaciones"] * 0.20).astype(int)
+                df_v_dia["operaciones_cashea"] = df_v_dia["numero_operaciones"] - df_v_dia["operaciones_contado"] - df_v_dia["operaciones_credito"]
             else:
-                df_v_dia = pd.DataFrame(columns=["fecha", "total_facturado", "numero_operaciones", "ventas_contado", "ventas_credito", "operaciones_contado", "operaciones_credito"])
+                df_v_dia = pd.DataFrame(columns=["fecha", "total_facturado", "numero_operaciones", "ventas_contado", "ventas_credito", "ventas_cashea", "operaciones_contado", "operaciones_credito", "operaciones_cashea"])
         else:
             q_v_dia = f"""
                 SELECT id_sucursal, fecha, total_facturado,
                        COALESCE(ventas_contado, 0.00) AS ventas_contado,
                        COALESCE(ventas_credito, 0.00) AS ventas_credito,
+                       COALESCE(ventas_cashea, 0.00) AS ventas_cashea,
                        numero_operaciones,
                        COALESCE(operaciones_contado, 0) AS operaciones_contado,
-                       COALESCE(operaciones_credito, 0) AS operaciones_credito
+                       COALESCE(operaciones_credito, 0) AS operaciones_credito,
+                       COALESCE(operaciones_cashea, 0) AS operaciones_cashea
                 FROM kpi_ventas_diarias
                 WHERE id_sucursal {cond_suc}
                   AND fecha BETWEEN '{f_ini_str}' AND '{f_fin_str}'
@@ -1423,13 +1436,16 @@ with tab_ventas:
     tot_facturado = df_v_prod["total_venta_monto"].sum() if (filtro_linea_activo or filtro_sublinea_activo or filtro_lab_activo) else (df_v_dia["total_facturado"].sum() if not df_v_dia.empty else 0)
     tot_contado = df_v_dia["ventas_contado"].sum() if "ventas_contado" in df_v_dia and not df_v_dia.empty else 0
     tot_credito = df_v_dia["ventas_credito"].sum() if "ventas_credito" in df_v_dia and not df_v_dia.empty else 0
+    tot_cashea  = df_v_dia["ventas_cashea"].sum() if "ventas_cashea" in df_v_dia and not df_v_dia.empty else 0
     pct_contado = (tot_contado / tot_facturado * 100) if tot_facturado > 0 else 0
     pct_credito = (tot_credito / tot_facturado * 100) if tot_facturado > 0 else 0
+    pct_cashea  = (tot_cashea / tot_facturado * 100) if tot_facturado > 0 else 0
 
     tot_unidades = df_v_prod["unidades_vendidas"].sum() if not df_v_prod.empty else 0
     tot_operaciones = df_v_dia["numero_operaciones"].sum() if not df_v_dia.empty else 0
     tot_ops_contado = df_v_dia["operaciones_contado"].sum() if "operaciones_contado" in df_v_dia and not df_v_dia.empty else 0
     tot_ops_credito = df_v_dia["operaciones_credito"].sum() if "operaciones_credito" in df_v_dia and not df_v_dia.empty else 0
+    tot_ops_cashea  = df_v_dia["operaciones_cashea"].sum() if "operaciones_cashea" in df_v_dia and not df_v_dia.empty else 0
     ticket_prom = (tot_facturado / tot_operaciones) if tot_operaciones > 0 else 0
 
     # Helper para renderizar tarjetas KPI blancas con formato idéntico a la imagen
@@ -1440,7 +1456,7 @@ with tab_ventas:
             return f"${val/1_000:.0f}K"
         return f"${val:,.2f}"
 
-    col_v1, col_v2, col_v3, col_v4, col_v5, col_v6 = st.columns(6)
+    col_v1, col_v2, col_v3, col_v4, col_v5, col_v6, col_v7 = st.columns(7)
     
     with col_v1:
         st.markdown(f"""
@@ -1460,7 +1476,7 @@ with tab_ventas:
         st.markdown(f"""
         <div class="kpi-card-white">
             <div class="kpi-header">
-                <span class="kpi-title">💵 Ventas Contado</span>
+                <span class="kpi-title">💵 Venta Contado</span>
                 <span class="kpi-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">💲</span>
             </div>
             <div class="kpi-value">{format_kpi_num(tot_contado)}</div>
@@ -1478,7 +1494,7 @@ with tab_ventas:
         st.markdown(f"""
         <div class="kpi-card-white">
             <div class="kpi-header">
-                <span class="kpi-title">📑 Ventas Crédito</span>
+                <span class="kpi-title">📑 Venta Crédito</span>
                 <span class="kpi-icon-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb;">📑</span>
             </div>
             <div class="kpi-value">{format_kpi_num(tot_credito)}</div>
@@ -1496,6 +1512,24 @@ with tab_ventas:
         st.markdown(f"""
         <div class="kpi-card-white">
             <div class="kpi-header">
+                <span class="kpi-title">💛 Venta Cashea</span>
+                <span class="kpi-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">⚡</span>
+            </div>
+            <div class="kpi-value">{format_kpi_num(tot_cashea)}</div>
+            <div class="kpi-subtext" style="color: #d97706;">
+                <span>▲ {pct_cashea:.1f}%</span>
+                <span style="color: #94a3b8; font-weight: 400;">({int(tot_ops_cashea):,})</span>
+            </div>
+            <svg class="kpi-sparkline" width="70" height="24" viewBox="0 0 70 24" fill="none">
+                <path d="M2 15 L20 11 L38 18 L54 7 L68 3" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_v5:
+        st.markdown(f"""
+        <div class="kpi-card-white">
+            <div class="kpi-header">
                 <span class="kpi-title">Nº Operaciones</span>
                 <span class="kpi-icon-badge" style="background: rgba(139, 92, 246, 0.15); color: #7c3aed;">📊</span>
             </div>
@@ -1506,7 +1540,7 @@ with tab_ventas:
         </div>
         """, unsafe_allow_html=True)
 
-    with col_v5:
+    with col_v6:
         st.markdown(f"""
         <div class="kpi-card-white">
             <div class="kpi-header">
@@ -1520,7 +1554,7 @@ with tab_ventas:
         </div>
         """, unsafe_allow_html=True)
 
-    with col_v6:
+    with col_v7:
         st.markdown(f"""
         <div class="kpi-card-white">
             <div class="kpi-header">
@@ -1536,14 +1570,18 @@ with tab_ventas:
 
     st.write("")
 
-    # Evolución Diaria de Ventas (Desglosando Contado y Crédito - Últimos 30 Días)
-    st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito (Últimos 30 Días)")
+    # Evolución Diaria de Ventas (Desglosando Contado, Crédito y Cashea - Últimos 30 Días)
+    st.markdown("#### 📈 Evolución Diaria de Ventas: Contado vs Crédito vs Cashea (Últimos 30 Días)")
     if not df_v_dia.empty:
         # Asegurar columnas si vienen de MySQL antiguo
         if "operaciones_contado" not in df_v_dia:
             df_v_dia["operaciones_contado"] = 0
         if "operaciones_credito" not in df_v_dia:
             df_v_dia["operaciones_credito"] = 0
+        if "operaciones_cashea" not in df_v_dia:
+            df_v_dia["operaciones_cashea"] = 0
+        if "ventas_cashea" not in df_v_dia:
+            df_v_dia["ventas_cashea"] = 0.0
 
         # Filtrar únicamente los últimos 30 días con respecto a la fecha final seleccionada
         fecha_maxima = pd.to_datetime(df_v_dia["fecha"]).max()
@@ -1562,10 +1600,12 @@ with tab_ventas:
         df_dia_agg = df_v_dia_30d.groupby("fecha").agg(
             ventas_contado=("ventas_contado", "sum"),
             ventas_credito=("ventas_credito", "sum"),
+            ventas_cashea=("ventas_cashea", "sum"),
             total_facturado=("total_facturado", "sum"),
             numero_operaciones=("numero_operaciones", "sum"),
             operaciones_contado=("operaciones_contado", "sum"),
             operaciones_credito=("operaciones_credito", "sum"),
+            operaciones_cashea=("operaciones_cashea", "sum"),
             unidades_vendidas=("unidades_vendidas", "sum")
         ).reset_index().sort_values("fecha")
 
@@ -1576,6 +1616,8 @@ with tab_ventas:
             df_dia_agg["operaciones_contado"],
             df_dia_agg["ventas_credito"],
             df_dia_agg["operaciones_credito"],
+            df_dia_agg["ventas_cashea"],
+            df_dia_agg["operaciones_cashea"],
             df_dia_agg["unidades_vendidas"]
         ))
 
@@ -1607,6 +1649,19 @@ with tab_ventas:
             hovertemplate="📑 <b>Crédito:</b> $%{y:,.2f} (%{customdata[5]:,} ops)<extra></extra>"
         ))
 
+        # Barra Cashea (#F59E0B)
+        fig_evol.add_trace(go.Bar(
+            x=df_dia_agg["fecha"],
+            y=df_dia_agg["ventas_cashea"],
+            name="💛 Venta Cashea",
+            marker=dict(
+                color="#F59E0B",
+                line=dict(color="#D97706", width=1)
+            ),
+            customdata=custom_info,
+            hovertemplate="💛 <b>Cashea:</b> $%{y:,.2f} (%{customdata[7]:,} ops)<extra></extra>"
+        ))
+
         # Punto invisible para totalizar el día en el hover unificado
         fig_evol.add_trace(go.Scatter(
             x=df_dia_agg["fecha"],
@@ -1615,7 +1670,7 @@ with tab_ventas:
             mode="markers",
             marker=dict(size=0, opacity=0),
             customdata=custom_info,
-            hovertemplate="📊 <b>Total Facturado Día:</b> $%{y:,.2f} (%{customdata[1]:,} ops)<br>📦 <b>Unidades Vendidas Día:</b> %{customdata[6]:,} uds<extra></extra>"
+            hovertemplate="📊 <b>Total Facturado Día:</b> $%{y:,.2f} (%{customdata[1]:,} ops)<br>📦 <b>Unidades Vendidas Día:</b> %{customdata[8]:,} uds<extra></extra>"
         ))
 
         fig_evol.update_layout(
@@ -1660,9 +1715,11 @@ with tab_ventas:
             total_facturado=("total_facturado", "sum"),
             ventas_contado=("ventas_contado", "sum"),
             ventas_credito=("ventas_credito", "sum"),
+            ventas_cashea=("ventas_cashea", "sum") if "ventas_cashea" in df_v_mes.columns else ("total_facturado", lambda x: 0),
             numero_operaciones=("numero_operaciones", "sum"),
             operaciones_contado=("operaciones_contado", "sum"),
-            operaciones_credito=("operaciones_credito", "sum")
+            operaciones_credito=("operaciones_credito", "sum"),
+            operaciones_cashea=("operaciones_cashea", "sum") if "operaciones_cashea" in df_v_mes.columns else ("numero_operaciones", lambda x: 0)
         ).reset_index().sort_values("periodo_mes")
 
         if not df_uds_mes.empty:
@@ -2079,7 +2136,59 @@ with tab_ventas:
         df_detalle_art["precio_promedio"] = round(df_detalle_art["total_venta_monto"] / df_detalle_art["unidades_vendidas"], 2)
         df_detalle_art = df_detalle_art.sort_values("total_venta_monto", ascending=False)
 
+        # Imagen del artículo (URL remota vantecsolser.com, fallback local o SVG genérico)
+        dir_imgs_prod = os.path.join(os.path.dirname(__file__), "assets", "productos")
+        os.makedirs(dir_imgs_prod, exist_ok=True)
+        img_generica_b64 = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj4KICA8cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iODAiIHJ4PSIxMCIgZmlsbD0iIzMzNDE1NSIvPgogIDxyZWN0IHg9IjIyIiB5PSIyMiIgd2lkdGg9IjM2IiBoZWlnaHQ9IjM2IiByeD0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTRhM2I4IiBzdHJva2Utd2lkdGg9IjIuNSIvPgogIDxwYXRoIGQ9Ik0yOCA0OCBMMzYgMzggTDQ0IDQ2IEw0OCA0MiBMNTIgNDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM4YmRmOCIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjM0IiBjeT0iMzIiIHI9IjMiIGZpbGw9IiNmNTllMGIiLz4KPC9zdmc+"
+
+        # URL base configurable para fotos en la nube (ej: en vantecsolser.com/fotos_productos/ o similar)
+        # Si está definida en st.secrets["app"]["url_fotos_productos"], se prioriza la nube
+        url_fotos_base = ""
+        try:
+            if "app" in st.secrets and "url_fotos_productos" in st.secrets["app"]:
+                url_fotos_base = str(st.secrets["app"]["url_fotos_productos"]).rstrip("/")
+        except Exception:
+            pass
+
+        def obtener_img_articulo(cb):
+            cb_str = str(cb).strip() if pd.notna(cb) else ""
+            if not cb_str:
+                return img_generica_b64
+
+            # 1. Si hay URL en la nube definida en secrets, apuntar directamente a ella
+            if url_fotos_base:
+                return f"{url_fotos_base}/{cb_str}.jpg"
+
+            # 2. Buscar si existe en la carpeta local assets/productos/
+            for ext in [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"]:
+                ruta_img = os.path.join(dir_imgs_prod, f"{cb_str}{ext}")
+                if os.path.exists(ruta_img):
+                    try:
+                        with open(ruta_img, "rb") as f_img:
+                            encoded = base64.b64encode(f_img.read()).decode("utf-8")
+                            mime = "image/png" if ext.lower() == ".png" else "image/jpeg"
+                            return f"data:{mime};base64,{encoded}"
+                    except Exception:
+                        pass
+
+            # 3. Fallback: URL web estándar en vantecsolser.com o genérica
+            return f"https://vantecsolser.com/fotos_productos/{cb_str}.jpg"
+
+        df_detalle_art["imagen"] = df_detalle_art["codigo_barras"].apply(obtener_img_articulo)
+
+        # Reordenar columnas para que la imagen aparezca al inicio
+        cols_ordenadas = ["imagen", "codigo_articulo", "codigo_barras", "nombre_producto", "descripcion_linea"]
+        if "descripcion_sublinea" in df_detalle_art.columns:
+            cols_ordenadas.append("descripcion_sublinea")
+        cols_ordenadas.extend(["nombre_laboratorio", "unidades_vendidas", "precio_promedio", "total_venta_monto"])
+        df_detalle_art = df_detalle_art[cols_ordenadas]
+
         cfg_art_v = {
+            "imagen": st.column_config.ImageColumn(
+                "Foto",
+                help="Imagen del artículo según su código de barras (JPG)",
+                width="small"
+            ),
             "codigo_articulo": "Cód. Artículo",
             "codigo_barras": "Código de Barras",
             "nombre_producto": "Descripción del Producto",
@@ -2185,40 +2294,41 @@ with tab_ventas:
                     cls = "badge-other"
                 return f'<span class="badge-lab {cls}">{nombre_lab}</span>'
 
-            filas_html = ""
+            filas_html = []
             for _, r_b in df_tabla_prod_suc.head(15).iterrows():
                 b_html = badge_lab_html(r_b["nombre_laboratorio"])
-                filas_html += f"""
-                <tr class="table-glass-row" style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s ease;">
-                    <td style="padding: 10px 14px; font-weight: 600; color: #38bdf8;">[{r_b['codigo_sucursal']}] {r_b['nombre_sucursal']}</td>
-                    <td style="padding: 10px 14px; color: #94a3b8; font-family: monospace;">{r_b['codigo_articulo']}</td>
-                    <td style="padding: 10px 14px; color: #f1f5f9; font-weight: 500;">{r_b['nombre_producto']}</td>
-                    <td style="padding: 10px 14px;">{b_html}</td>
-                    <td style="padding: 10px 14px; text-align: right; color: #e2e8f0;">{int(r_b['unidades_vendidas']):,}</td>
-                    <td style="padding: 10px 14px; text-align: right; color: #34d399; font-weight: 600;">${r_b['total_venta_monto']:,.2f}</td>
-                </tr>
-                """
+                fila = (
+                    '<tr class="table-glass-row" style="border-bottom: 1px solid rgba(255,255,255,0.06);">'
+                    f'<td style="padding: 10px 14px; font-weight: 600; color: #38bdf8;">[{r_b["codigo_sucursal"]}] {r_b["nombre_sucursal"]}</td>'
+                    f'<td style="padding: 10px 14px; color: #94a3b8; font-family: monospace;">{r_b["codigo_articulo"]}</td>'
+                    f'<td style="padding: 10px 14px; color: #f1f5f9; font-weight: 500;">{r_b["nombre_producto"]}</td>'
+                    f'<td style="padding: 10px 14px;">{b_html}</td>'
+                    f'<td style="padding: 10px 14px; text-align: right; color: #e2e8f0;">{int(r_b["unidades_vendidas"]):,}</td>'
+                    f'<td style="padding: 10px 14px; text-align: right; color: #34d399; font-weight: 600;">${r_b["total_venta_monto"]:,.2f}</td>'
+                    '</tr>'
+                )
+                filas_html.append(fila)
 
-            tabla_estilizada = f"""
-            <div style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
-                    <thead>
-                        <tr style="background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8;">
-                            <th style="padding: 10px 14px; text-align: left;">Sucursal</th>
-                            <th style="padding: 10px 14px; text-align: left;">Cód. Artículo</th>
-                            <th style="padding: 10px 14px; text-align: left;">Producto</th>
-                            <th style="padding: 10px 14px; text-align: left;">Laboratorio</th>
-                            <th style="padding: 10px 14px; text-align: right;">Unidades</th>
-                            <th style="padding: 10px 14px; text-align: right;">Total Facturado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filas_html}
-                    </tbody>
-                </table>
-            </div>
-            """
-            st.markdown(tabla_estilizada, unsafe_allow_html=True)
+            tabla_estilizada = (
+                '<div style="background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; margin-top: 8px;">'
+                '<table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">'
+                '<thead>'
+                '<tr style="background: rgba(15, 23, 42, 0.75); border-bottom: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #94a3b8;">'
+                '<th style="padding: 10px 14px; text-align: left;">Sucursal</th>'
+                '<th style="padding: 10px 14px; text-align: left;">Cód. Artículo</th>'
+                '<th style="padding: 10px 14px; text-align: left;">Producto</th>'
+                '<th style="padding: 10px 14px; text-align: left;">Laboratorio</th>'
+                '<th style="padding: 10px 14px; text-align: right;">Unidades</th>'
+                '<th style="padding: 10px 14px; text-align: right;">Total Facturado</th>'
+                '</tr>'
+                '</thead>'
+                '<tbody>'
+                + "".join(filas_html) +
+                '</tbody>'
+                '</table>'
+                '</div>'
+            )
+            components.html(tabla_estilizada, height=450, scrolling=True)
     else:
         st.info("Sin registros de productos por sucursal para este período.")
 
@@ -3561,11 +3671,68 @@ with tab_finanzas:
 
     st.divider()
 
-    st.markdown("#### 💳 Participación por Canal de Cobro")
+    st.markdown("#### 💳 Canales de Cobro y Flujo de Ingresos")
     if not df_pagos.empty:
-        df_p_agg = df_pagos.groupby("forma_pago")["total_ingresado"].sum().reset_index()
-        fig_p = px.pie(df_p_agg, names="forma_pago", values="total_ingresado", hole=0.45, title="Distribución de Métodos de Pago")
-        st.plotly_chart(aplicar_estilo_farma(fig_p), use_container_width=True)
+        # Enriquecer con sucursal si está disponible
+        df_p_data = df_pagos.copy()
+        if "codigo_sucursal" not in df_p_data.columns and "id_sucursal" in df_p_data.columns:
+            cols_s_merge = [c for c in ["id_sucursal", "codigo_sucursal", "nombre"] if c in df_sucursales.columns]
+            df_p_data = df_p_data.merge(
+                df_sucursales[cols_s_merge].rename(columns={"nombre": "nombre_sucursal"}),
+                on="id_sucursal",
+                how="left"
+            )
+
+        df_p_agg = df_p_data.groupby("forma_pago")["total_ingresado"].sum().reset_index()
+        tot_general_cobros = df_p_agg["total_ingresado"].sum()
+        df_p_agg["participacion"] = (df_p_agg["total_ingresado"] / tot_general_cobros * 100) if tot_general_cobros > 0 else 0
+        df_p_agg = df_p_agg.sort_values("total_ingresado", ascending=False)
+
+        col_g_pago, col_t_pago = st.columns([1, 1])
+
+        with col_g_pago:
+            fig_p = px.pie(
+                df_p_agg, 
+                names="forma_pago", 
+                values="total_ingresado", 
+                hole=0.45, 
+                title="Distribución de Métodos de Pago",
+                color_discrete_sequence=px.colors.qualitative.Safe
+            )
+            fig_p.update_traces(
+                hovertemplate="<b>Canal:</b> %{label}<br><b>Ingreso Total:</b> $%{value:,.2f}<br><b>Participación:</b> %{percent}<extra></extra>"
+            )
+            st.plotly_chart(aplicar_estilo_farma(fig_p), use_container_width=True)
+
+        with col_t_pago:
+            st.markdown("##### 📌 Resumen Detallado por Canal de Cobro")
+            st.dataframe(
+                df_p_agg,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "forma_pago": "Canal de Cobro",
+                    "total_ingresado": st.column_config.NumberColumn("Monto Ingresado ($)", format="$%.2f"),
+                    "participacion": st.column_config.NumberColumn("% Participación", format="%.2f%%")
+                }
+            )
+
+        # Si hay datos de varias sucursales o desglose de fecha, mostrar tabla desglosada
+        if "codigo_sucursal" in df_p_data.columns and df_p_data["id_sucursal"].nunique() > 1:
+            with st.expander("🏢 Desglose de Canales de Cobro por Sucursal", expanded=False):
+                df_p_suc = df_p_data.groupby(["codigo_sucursal", "nombre_sucursal", "forma_pago"])["total_ingresado"].sum().reset_index()
+                df_p_suc = df_p_suc.sort_values(["nombre_sucursal", "total_ingresado"], ascending=[True, False])
+                st.dataframe(
+                    df_p_suc,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "codigo_sucursal": "Cód. Sucursal",
+                        "nombre_sucursal": "Sucursal / Farmacia",
+                        "forma_pago": "Canal de Cobro",
+                        "total_ingresado": st.column_config.NumberColumn("Monto Total ($)", format="$%.2f")
+                    }
+                )
     else:
         st.info("Sin registros de formas de pago.")
 
@@ -3748,11 +3915,14 @@ with tab_sugerencias:
     # -------------------------------------------------------------
     # 3. MOTOR DE ANÁLISIS DE VENTAS & TICKETS
     # -------------------------------------------------------------
-    # Mix Contado vs Crédito y Ticket Promedio
+    # Mix Contado vs Crédito vs Cashea y Ticket Promedio
     tot_ventas_periodo = df_v_dia["total_facturado"].sum() if not df_v_dia.empty else 0
     tot_contado_periodo = df_v_dia["ventas_contado"].sum() if "ventas_contado" in df_v_dia and not df_v_dia.empty else 0
     tot_credito_periodo = df_v_dia["ventas_credito"].sum() if "ventas_credito" in df_v_dia and not df_v_dia.empty else 0
+    tot_cashea_periodo = df_v_dia["ventas_cashea"].sum() if "ventas_cashea" in df_v_dia and not df_v_dia.empty else 0
+    pct_contado_actual = (tot_contado_periodo / tot_ventas_periodo * 100) if tot_ventas_periodo > 0 else 0
     pct_credito_actual = (tot_credito_periodo / tot_ventas_periodo * 100) if tot_ventas_periodo > 0 else 0
+    pct_cashea_actual = (tot_cashea_periodo / tot_ventas_periodo * 100) if tot_ventas_periodo > 0 else 0
 
     # KPIs Principales de Diagnóstico
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
@@ -3889,17 +4059,20 @@ with tab_sugerencias:
     col_v_sug1, col_v_sug2 = st.columns(2)
 
     with col_v_sug1:
-        st.markdown("#### 💳 Mix de Facturación: Contado vs Crédito")
+        st.markdown("#### 💳 Mix de Facturación: Contado vs Crédito vs Cashea")
         st.write(f"- Facturación Total: **${tot_ventas_periodo:,.2f}**")
-        st.write(f"- Ventas de Contado: **${tot_contado_periodo:,.2f}** ({100-pct_credito_actual:.1f}%)")
+        st.write(f"- Ventas de Contado: **${tot_contado_periodo:,.2f}** ({pct_contado_actual:.1f}%)")
         st.write(f"- Ventas a Crédito: **${tot_credito_periodo:,.2f}** ({pct_credito_actual:.1f}%)")
+        st.write(f"- Ventas Cashea: **${tot_cashea_periodo:,.2f}** ({pct_cashea_actual:.1f}%)")
 
         if pct_credito_actual > 40:
-            st.warning(f"⚠️ **Atención:** El volumen de crédito representa el **{pct_credito_actual:.1f}%** de la venta total. Se sugiere revisar la política de plazos de cobranza para proteger el flujo de caja operativo.")
-        elif pct_credito_actual < 10:
-            st.info(f"💡 **Oportunidad:** El crédito solo representa el **{pct_credito_actual:.1f}%**. Existe margen para ofrecer facilidades crediticias a clientes corporativos recurrentes para incrementar el ticket promedio.")
+            st.warning(f"⚠️ **Atención:** El volumen de crédito tradicional representa el **{pct_credito_actual:.1f}%** de la venta total. Se sugiere revisar la política de plazos de cobranza para proteger el flujo de caja operativo.")
+        elif pct_cashea_actual > 25:
+            st.info(f"⚡ **Cashea:** La modalidad Cashea representa el **{pct_cashea_actual:.1f}%** de la facturación, siendo un catalizador clave en la rotación de artículos de mayor valor.")
+        elif pct_credito_actual < 10 and pct_cashea_actual < 5:
+            st.info(f"💡 **Oportunidad:** El crédito tradicional ({pct_credito_actual:.1f}%) y Cashea ({pct_cashea_actual:.1f}%) son bajos. Existe margen para impulsar convenios y facilidades de pago para incrementar el ticket promedio.")
         else:
-            st.success("✅ La relación Contado / Crédito se mantiene en un rango equilibrado y saludable.")
+            st.success("✅ La distribución entre Contado, Crédito y Cashea se mantiene en un rango equilibrado y saludable.")
 
     with col_v_sug2:
         st.markdown("#### 🎯 Productos Tracción (Estrategia 80/20 Pareto)")

@@ -125,17 +125,19 @@ CREATE TABLE IF NOT EXISTS maestro_productos (
     INDEX idx_prod_barras (codigo_barras)
 );
 
--- 7. KPI: Ventas Diarias Globales por Farmacia (Discriminando Contado y Crédito con Operaciones)
+-- 7. KPI: Ventas Diarias Globales por Farmacia (Discriminando Contado, Crédito y Cashea con Operaciones)
 CREATE TABLE IF NOT EXISTS kpi_ventas_diarias (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     fecha DATE NOT NULL,
-    total_facturado DECIMAL(12, 2) NOT NULL,       -- Ventas brutas totales del día
+    total_facturado DECIMAL(12, 2) NOT NULL,       -- Ventas brutas totales del día (contado + credito + cashea)
     ventas_contado DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Ventas cobradas de inmediato (efectivo, tarjeta, pago móvil)
-    ventas_credito DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Ventas a crédito (seguros, convenios empresariales, particulares)
+    ventas_credito DECIMAL(12, 2) NOT NULL DEFAULT 0.00,  -- Ventas a crédito tradicionales (seguros, convenios empresariales, particulares)
+    ventas_cashea DECIMAL(12, 2) NOT NULL DEFAULT 0.00,   -- Ventas bajo modalidad Cashea (tipo_fp = 'CASH')
     numero_operaciones INT NOT NULL,               -- Cantidad total de tickets / operaciones / ventas
     operaciones_contado INT NOT NULL DEFAULT 0,    -- Tickets / transacciones de contado
-    operaciones_credito INT NOT NULL DEFAULT 0,    -- Facturas / operaciones a crédito
+    operaciones_credito INT NOT NULL DEFAULT 0,    -- Facturas / operaciones a crédito tradicional
+    operaciones_cashea INT NOT NULL DEFAULT 0,    -- Facturas / operaciones modalidad Cashea
     ticket_promedio DECIMAL(10, 2) GENERATED ALWAYS AS (total_facturado / numero_operaciones) STORED,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
@@ -235,12 +237,12 @@ CREATE TABLE IF NOT EXISTS kpi_ventas_vendedor (
     UNIQUE KEY uq_sucursal_vendedor_fecha (id_sucursal, nombre_vendedor, fecha)
 );
 
--- 12. KPI: Métodos de Pago Utilizados (Flujo Financiero por Sucursal)
+-- 12. KPI: Métodos de Pago Utilizados (Flujo Financiero por Sucursal - Dinámico)
 CREATE TABLE IF NOT EXISTS kpi_formas_pago (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     fecha DATE NOT NULL,
-    forma_pago ENUM('Efectivo', 'Tarjeta Crédito', 'Tarjeta Débito', 'Transferencia', 'Pago Móvil', 'Otro') NOT NULL,
+    forma_pago VARCHAR(50) NOT NULL,              -- Texto dinámico desde Profit/reng_tip (US$, BS, Tarjetas por banco, etc.)
     total_ingresado DECIMAL(12, 2) NOT NULL,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
@@ -260,13 +262,13 @@ CREATE TABLE IF NOT EXISTS kpi_saldos_bancos (
     UNIQUE KEY uq_sucursal_banco_fecha (id_sucursal, nombre_banco, numero_cuenta_oculto, fecha)
 );
 
--- 14. KPI: Cajas de Efectivo por Sucursal (Bóveda / Cajas Operativas)
+-- 14. KPI: Cajas de Efectivo por Sucursal (Bóveda / Cajas Operativas - Dinámico)
 CREATE TABLE IF NOT EXISTS kpi_cajas_efectivo (
     id_registro BIGINT AUTO_INCREMENT PRIMARY KEY,
     id_sucursal INT NOT NULL,
     fecha DATE NOT NULL,
-    tipo_caja ENUM('Caja Principal / Bóveda', 'Caja Chica', 'Caja Punto de Venta') NOT NULL DEFAULT 'Caja Principal / Bóveda',
-    moneda ENUM('USD', 'VES', 'EUR', 'Otra') NOT NULL DEFAULT 'USD',
+    tipo_caja VARCHAR(60) NOT NULL DEFAULT 'Caja Principal / Bóveda',
+    moneda VARCHAR(20) NOT NULL DEFAULT 'USD',
     saldo_efectivo DECIMAL(12, 2) NOT NULL,
     ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal),
